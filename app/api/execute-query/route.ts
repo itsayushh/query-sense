@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai'
 import { Client } from 'pg'
 import { MongoClient } from 'mongodb'
 import mysql from 'mysql2/promise'
@@ -181,11 +181,10 @@ export async function POST(request: Request) {
       User Request: ${prompt}
 
       Requirements:
-      1. Generate only SELECT queries (no INSERT, UPDATE, DELETE, or DDL statements)
-      2. Use proper SQL syntax for ${connectionDetails.type}
-      3. Include column names explicitly (avoid SELECT *)
-      4. Use appropriate JOIN conditions if multiple tables are involved
-      5. Format the query with proper indentation
+      1. Use proper SQL syntax for ${connectionDetails.type}
+      2. Include column names explicitly
+      3. Use appropriate JOIN conditions if multiple tables are involved
+      4. Format the query with proper indentation
 
       Response format:
       SQL: <your generated query>
@@ -196,8 +195,8 @@ export async function POST(request: Request) {
       model: "gemini-pro",
       safetySettings: [
         {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_NONE",
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
         },
       ],
     })
