@@ -15,8 +15,8 @@ interface DatabasePageProps {
   }
 }
 
-export default function DatabasePage({ searchParams }: DatabasePageProps) {
-  const tables = searchParams.tables ? JSON.parse(searchParams.tables) : []
+export default async function DatabasePage({ searchParams }: {searchParams: {tables: string}}) {   
+  const tables = await searchParams ? JSON.parse(searchParams.tables) : []
   
   return (
     <div className="container mx-auto p-6 space-y-8 bg-primary/10">
@@ -32,10 +32,6 @@ export default function DatabasePage({ searchParams }: DatabasePageProps) {
         <div className="space-y-8">
           <Suspense fallback={<DatabaseInfoSkeleton />}>
             <DatabaseInfo 
-              type={searchParams.type}
-              host={searchParams.host}
-              port={searchParams.port}
-              database={searchParams.database}
               tables={tables}
             />
           </Suspense>

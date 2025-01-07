@@ -29,22 +29,22 @@ export function DatabasePrompt() {
         setIsLoading(true)
 
         try {
-            const connectionDetails = {
-                type: searchParams.get('type'),
-                host: searchParams.get('host'),
-                port: Number(searchParams.get('port')),
-                username: searchParams.get('username'),
-                password: searchParams.get('password'),
-                database: searchParams.get('database'),
-                tables: JSON.parse(searchParams.get('tables') || '[]')
-            }
+            // const connectionDetails = {
+            //     // type: searchParams.get('type'),
+            //     // host: searchParams.get('host'),
+            //     // port: Number(searchParams.get('port')),
+            //     // username: searchParams.get('username'),
+            //     // password: searchParams.get('password'),
+            //     // database: searchParams.get('database'),
+            //     tables: JSON.parse(searchParams.get('tables') || '[]')
+            // }
 
             const response = await fetch('/api/execute-query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt,
-                    connectionDetails
+                    tables:JSON.parse(searchParams.get('tables') || '[]'),
                 }),
             })
 
