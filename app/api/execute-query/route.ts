@@ -5,6 +5,8 @@ import { MongoClient } from 'mongodb'
 import mysql from 'mysql2/promise'
 import sqlite3 from 'sqlite3'
 import { promisify } from 'util'
+import { getStoredCredentials } from '@/utils/sessionStore'
+import { DatabaseConnectionConfig, DatabaseType, ConnectionResult } from "@/types/Database"
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -18,159 +20,282 @@ interface TableSchema {
   }>
 }
 
-async function getTableSchema(connectionDetails: any): Promise<TableSchema[]> {
-  const { type, host, port, username, password, database, tables } = connectionDetails
+function getDatabaseName(config: DatabaseConnectionConfig): string {
+  switch(config.method) {
+    case 'parameters':
+      return config.parameters.database
+    case 'url':
+      return config.connectionString.split('/').pop()?.split('?')[0] || ''
+  }
+}
 
+async function establishConnection(config: DatabaseConnectionConfig): Promise<ConnectionResult> {
+  try {
+    let connection: any
+
+    if (config.method === 'url') {
+      switch (config.type) {
+        case 'postgresql':
+          connection = new Client(config.connectionString)
+          await connection.connect()
+          break
+        case 'mysql':
+          connection = await mysql.createConnection(config.connectionString)
+          break
+        case 'mongodb':
+          connection = new MongoClient(config.connectionString)
+          await connection.connect()
+          break
+        case 'sqlite':
+          connection = new sqlite3.Database(config.connectionString)
+          break
+      }
+    } else {
+      switch (config.type) {
+        case 'postgresql':
+          connection = new Client({
+            host: config.parameters.host,
+            port: config.parameters.port,
+            user: config.parameters.username,
+            password: config.parameters.password,
+            database: config.parameters.database
+          })
+          await connection.connect()
+          break
+        case 'mysql':
+          connection = await mysql.createConnection({
+            host: config.parameters.host,
+            port: config.parameters.port,
+            user: config.parameters.username,
+            password: config.parameters.password,
+            database: config.parameters.database
+          })
+          break
+        case 'mongodb':
+          const url = `mongodb://${config.parameters.username}:${encodeURIComponent(config.parameters.password)}@${config.parameters.host}:${config.parameters.port}/${config.parameters.database}`
+          connection = new MongoClient(url)
+          await connection.connect()
+          break
+        case 'sqlite':
+          connection = new sqlite3.Database(config.parameters.database)
+          break
+      }
+    }
+
+    const tables = await getTablesList(config.type, connection)
+    return { success: true, connection, tables }
+  } catch (error) {
+    return { 
+      success: false, 
+      connection: null, 
+      tables: [],
+      error: error instanceof Error ? error.message : 'Connection failed'
+    }
+  }
+}
+
+async function getTablesList(type: DatabaseType, connection: any): Promise<string[]> {
   switch (type) {
     case 'postgresql': {
-      const client = new Client({
-        host, port, user: username, password, database
-      })
-      await client.connect()
-      
-      const schemas = await Promise.all(tables.map(async (table: string) => {
-        const result = await client.query(`
-          SELECT 
-            column_name, 
-            data_type,
-            is_nullable,
-            CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END as is_primary
-          FROM information_schema.columns c
-          LEFT JOIN (
-            SELECT ku.column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage ku
-              ON tc.constraint_name = ku.constraint_name
-            WHERE tc.constraint_type = 'PRIMARY KEY'
-              AND tc.table_name = $1
-          ) pk ON c.column_name = pk.column_name
-          WHERE table_name = $1
-        `, [table])
-        
-        return {
-          tableName: table,
-          columns: result.rows.map(col => ({
-            name: col.column_name,
-            type: col.data_type,
-            nullable: col.is_nullable === 'YES',
-            isPrimary: col.is_primary
-          }))
-        }
-      }))
-      
-      await client.end()
-      return schemas
+      const result = await (connection as Client).query(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+      )
+      return result.rows.map(row => row.table_name)
     }
-
     case 'mysql': {
-      const connection = await mysql.createConnection({
-        host, port, user: username, password, database
-      })
-      
-      const schemas = await Promise.all(tables.map(async (table: string) => {
-        const [columns] = await connection.query(`
-          SELECT 
-            COLUMN_NAME as name,
-            DATA_TYPE as type,
-            IS_NULLABLE as nullable,
-            COLUMN_KEY as \`key\`
-          FROM INFORMATION_SCHEMA.COLUMNS 
-          WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?
-        `, [table, database])
-        
-        return {
-          tableName: table,
-          columns: (columns as any[]).map(col => ({
-            name: col.name,
-            type: col.type,
-            nullable: col.nullable === 'YES',
-            isPrimary: col.key === 'PRI'
-          }))
-        }
-      }))
-      
-      await connection.end()
-      return schemas
+      const [rows] = await (connection as mysql.Connection).query('SHOW TABLES')
+      return (rows as any[]).map(row => Object.values(row)[0] as string)
     }
-
     case 'mongodb': {
-      const url = `mongodb://${username}:${password}@${host}:${port}/${database}`
-      const client = new MongoClient(url)
-      await client.connect()
-      
-      const db = client.db(database)
-      const schemas = await Promise.all(tables.map(async (collection: string) => {
-        // For MongoDB, we'll sample documents to infer schema
-        const sample = await db.collection(collection)
-          .aggregate([{ $sample: { size: 1 } }])
-          .toArray()
-        
-        const columns = sample.length > 0 
-          ? Object.entries(sample[0]).map(([key, value]) => ({
-              name: key,
-              type: typeof value,
-              nullable: true,
-              isPrimary: key === '_id'
-            }))
-          : []
-        
-        return {
-          tableName: collection,
-          columns
-        }
-      }))
-      
-      await client.close()
-      return schemas
+      const collections = await (connection as MongoClient).db().listCollections().toArray()
+      return collections.map(col => col.name)
     }
-
     case 'sqlite': {
-      const db = new sqlite3.Database(database)
-      const query = promisify(db.all.bind(db))
-      
-      const schemas = await Promise.all(tables.map(async (table: string) => {
-        const columns = await query(
-          `PRAGMA table_info(${table})`
-        ) as Array<{
-          name: string,
-          type: string,
-          notnull: number,
-          pk: number
-        }>
-        
-        return {
-          tableName: table,
-          columns: columns.map(col => ({
-            name: col.name,
-            type: col.type,
-            nullable: !col.notnull,
-            isPrimary: Boolean(col.pk)
-          }))
-        }
-      }))
-      
-      await promisify(db.close.bind(db))()
-      return schemas
+      return new Promise((resolve, reject) => {
+        ;(connection as sqlite3.Database).all(
+          "SELECT name FROM sqlite_master WHERE type='table'",
+          (err, tables: Array<{name: string}>) => {
+            if (err) reject(err)
+            resolve(tables.map(t => t.name))
+          }
+        )
+      })
     }
+  }
+}
 
-    default:
-      throw new Error(`Unsupported database type: ${type}`)
+async function getTableSchema(
+    config: DatabaseConnectionConfig,
+    tables: string[],
+    connection: any
+  ): Promise<TableSchema[]> {
+    switch (config.type) {
+        case 'postgresql': {
+            const client = connection as Client;
+            return await Promise.all(tables.map(async (table) => {
+              // Fixed PostgreSQL schema query
+              const result = await client.query(`
+                SELECT 
+                  c.column_name,
+                  c.data_type,
+                  c.is_nullable,
+                  (
+                    SELECT TRUE 
+                    FROM information_schema.table_constraints tc
+                    JOIN information_schema.key_column_usage ku
+                      ON tc.constraint_name = ku.constraint_name
+                    WHERE tc.constraint_type = 'PRIMARY KEY'
+                      AND tc.table_name = c.table_name
+                      AND ku.column_name = c.column_name
+                  ) as is_primary
+                FROM information_schema.columns c
+                WHERE c.table_name = $1
+                AND c.table_schema = 'public'
+                ORDER BY c.ordinal_position
+              `, [table]);
+      
+              return {
+                tableName: table,
+                columns: result.rows.map(col => ({
+                  name: col.column_name,
+                  type: col.data_type,
+                  nullable: col.is_nullable === 'YES',
+                  isPrimary: !!col.is_primary
+                }))
+              };
+            }));
+          }
+  
+      case 'mysql': {
+        const conn = connection as mysql.Connection
+        const database = config.method === 'parameters' ? config.parameters.database : 
+          config.connectionString?.split('/').pop()?.split('?')[0]
+        
+        return await Promise.all(tables.map(async (table) => {
+          const [columns] = await conn.query(`
+            SELECT 
+              COLUMN_NAME as name,
+              DATA_TYPE as type,
+              IS_NULLABLE as nullable,
+              COLUMN_KEY as \`key\`
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?
+          `, [table, database])
+          
+          return {
+            tableName: table,
+            columns: (columns as any[]).map(col => ({
+              name: col.name,
+              type: col.type,
+              nullable: col.nullable === 'YES',
+              isPrimary: col.key === 'PRI'
+            }))
+          }
+        }))
+      }
+  
+      case 'mongodb': {
+        const client = connection as MongoClient
+        const database = config.method === 'parameters' ? config.parameters.database :
+          config.connectionString?.split('/').pop()?.split('?')[0]
+        
+        if (!database) throw new Error('Database name not found in connection config')
+        
+        const db = client.db(database)
+        return await Promise.all(tables.map(async (collection) => {
+          const sample = await db.collection(collection)
+            .aggregate([{ $sample: { size: 1 } }])
+            .toArray()
+          
+          const columns = sample.length > 0 
+            ? Object.entries(sample[0]).map(([key, value]) => ({
+                name: key,
+                type: typeof value,
+                nullable: true,
+                isPrimary: key === '_id'
+              }))
+            : []
+          
+          return {
+            tableName: collection,
+            columns
+          }
+        }))
+      }
+  
+      case 'sqlite': {
+        const db = connection as sqlite3.Database
+        const query = promisify(db.all.bind(db))
+        
+        return await Promise.all(tables.map(async (table) => {
+          const columns = await query(
+            `PRAGMA table_info(${table})`
+          ) as Array<{
+            name: string,
+            type: string,
+            notnull: number,
+            pk: number
+          }>
+          
+          return {
+            tableName: table,
+            columns: columns.map(col => ({
+              name: col.name,
+              type: col.type,
+              nullable: !col.notnull,
+              isPrimary: Boolean(col.pk)
+            }))
+          }
+        }))
+      }
+  
+      default:
+        throw new Error(`Unsupported database type: ${config.type}`)
+    }
+  }
+
+async function closeConnection(type: DatabaseType, connection: any): Promise<void> {
+  switch (type) {
+    case 'postgresql':
+      await (connection as Client).end()
+      break
+    case 'mysql':
+      await (connection as mysql.Connection).end()
+      break
+    case 'mongodb':
+      await (connection as MongoClient).close()
+      break
+    case 'sqlite':
+      await promisify((connection as sqlite3.Database).close.bind(connection))()
+      break
   }
 }
 
 export async function POST(request: Request) {
+  let connection: any = null
+  let config: DatabaseConnectionConfig | null = null
+  
   try {
-    const { prompt, connectionDetails } = await request.json()
+    const { prompt, tables } = await request.json()
+    config = await getStoredCredentials()
     
-    // Get table schemas
-    const schemas = await getTableSchema(connectionDetails)
+    if (!config) {
+      throw new Error('Database connection not found')
+    }
+
+    const connResult = await establishConnection(config)
+    if (!connResult.success) {
+      throw new Error(connResult.error)
+    }
     
-    // Prepare context for Gemini with more explicit safe SQL generation instructions
+    connection = connResult.connection
+    const schemas = await getTableSchema(config, tables, connection)
+    
     const context = `
       You are a SQL query generator assistant. Generate a safe, read-only SQL query based on the following information:
 
-      Database Type: ${connectionDetails.type}
-      Database Name: ${connectionDetails.database}
+      Database Type: ${config.type}
+      Database Name: ${getDatabaseName(config)}
 
       Available Tables and their schemas:
       ${schemas.map(schema => `
@@ -181,7 +306,7 @@ export async function POST(request: Request) {
       User Request: ${prompt}
 
       Requirements:
-      1. Use proper SQL syntax for ${connectionDetails.type}
+      1. Use proper SQL syntax for ${config.type}
       2. Include column names explicitly
       3. Use appropriate JOIN conditions if multiple tables are involved
       4. Format the query with proper indentation
@@ -190,7 +315,6 @@ export async function POST(request: Request) {
       SQL: <your generated query>
     `
 
-    // Generate query using Gemini with safety settings
     const model = genAI.getGenerativeModel({ 
       model: "gemini-pro",
       safetySettings: [
@@ -202,31 +326,28 @@ export async function POST(request: Request) {
     })
 
     const result = await model.generateContent(context)
-    
-    if (!result.response.text()) {
+    const sqlQuery = result.response.text()?.split('SQL:')[1]?.trim() || result.response.text()?.trim()
+
+    if (!sqlQuery) {
       throw new Error('Failed to generate query')
     }
 
-    // Extract the SQL query from the response
-    const responseText = result.response.text()
-    const sqlQuery = responseText.includes('SQL:') 
-      ? responseText.split('SQL:')[1].trim()
-      : responseText.trim()
-
-    return NextResponse.json({
-      success: true,
-      query: sqlQuery
-    })
+    return NextResponse.json({ success: true, query: sqlQuery })
   } catch (error) {
-    console.error('Query generation error:', error)
     return NextResponse.json(
       { 
         success: false, 
-        message: error instanceof Error 
-          ? error.message 
-          : 'Failed to generate query - Please try rephrasing your request'
+        message: error instanceof Error ? error.message : 'Failed to generate query'
       },
       { status: 500 }
     )
+  } finally {
+    if (connection && config) {
+      try {
+        await closeConnection(config.type, connection)
+      } catch (error) {
+        console.error('Error closing connection:', error)
+      }
+    }
   }
-} 
+}
