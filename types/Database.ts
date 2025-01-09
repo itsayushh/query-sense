@@ -24,6 +24,18 @@
         parameters: ConnectionParameters;
     }
 
+    export interface TableColumn {
+        name: string
+        type: string
+        nullable?: boolean
+        isPrimary?: boolean
+      }
+      
+      export interface TableSchema {
+        tableName: string
+        columns: TableColumn[]
+      }
+
     export type DatabaseConnectionConfig = UrlConnectionConfig | ParametersConnectionConfig;
 
     export interface ConnectionResult {
