@@ -1,38 +1,22 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { DatabaseZapIcon, Eye, EyeOff, Link2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
-import { useRouter } from 'next/navigation'
-import { Cable, DatabaseIcon, DatabaseZapIcon, Eye, EyeOff, Icon, KeyIcon, Link2Icon, ServerIcon, UserIcon } from 'lucide-react'
 import { LoadingSpinner } from '../icons'
-import { ConnectionMethod, ConnectionParameters, DatabaseConnectionConfig, DatabaseType, ParametersConnectionConfig, UrlConnectionConfig } from '@/types/Database'
+import type { DatabaseConnectionConfig, DatabaseType, ConnectionMethod, ConnectionParameters, ParametersConnectionConfig, UrlConnectionConfig } from '@/types/Database'
+import { DATABASE_CONFIG } from '@/utils/constants'
+import { DatabaseFormInput } from './database-form'
+import { connection } from 'next/server'
+import { set } from 'react-hook-form'
 
-const PORT_MAP: Record<DatabaseType, number> = {
-    mysql: 3306,
-    postgresql: 5432,
-    mongodb: 27017,
-    sqlite: 0,
-}
-
-const CONNECTION_STRING_TEMPLATES: Record<DatabaseType, string> = {
-    mysql: 'mysql://user:password@localhost:3306/dbname',
-    postgresql: 'postgresql://user:password@localhost:5432/dbname',
-    mongodb: 'mongodb+srv://user:password@cluster.xxxxx.mongodb.net/dbname',
-    sqlite: '/path/to/database.sqlite',
-}
-
-const DEFAULT_VALUES: ParametersConnectionConfig = {
+const DEFAULT_VALUES:DatabaseConnectionConfig = {
     type: 'mysql',
     method: 'parameters',
     parameters: {
@@ -43,38 +27,9 @@ const DEFAULT_VALUES: ParametersConnectionConfig = {
         database: '',
     }
 }
-
-const FormInput = ({
-    label,
-    error,
-    icon: Icon,
-    ...props
-}: {
-    label: string
-    error?: string
-    icon?: React.ComponentType<any>
-} & React.InputHTMLAttributes<HTMLInputElement>) => (
-    <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {label}
-        </label>
-        <div className="relative">
-            {Icon && (
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-300">
-                    <Icon className="h-4 w-4" />
-                </div>
-            )}
-            <Input
-                {...props}
-                className={`${error ? 'border-red-500' : ''} ${Icon ? 'pl-9' : ''} bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200`}
-            />
-        </div>
-        {error && (
-            <p className="text-sm text-red-500">{error}</p>
-        )}
-    </div>
-)
-
+type FormDataUpdates = 
+    | (Partial<Omit<ParametersConnectionConfig, 'parameters'>> & { parameters?: Partial<ConnectionParameters> })
+    | (Partial<UrlConnectionConfig>)
 
 export function DatabaseConnectionForm() {
     const router = useRouter()
@@ -87,16 +42,17 @@ export function DatabaseConnectionForm() {
         const newErrors: typeof errors = {}
 
         if (formData.method === 'url') {
-            if (!formData.connectionString) {
+            if (!formData.connectionString?.trim()) {
                 newErrors.connectionString = 'Connection string is required'
             }
+            // Add URL format validation if needed
         } else {
             const { parameters } = formData
-            if (!parameters.host) newErrors.host = 'Host is required'
+            if (!parameters.host?.trim()) newErrors.host = 'Host is required'
             if (!parameters.port) newErrors.port = 'Port is required'
-            if (!parameters.username) newErrors.username = 'Username is required'
-            if (!parameters.password) newErrors.password = 'Password is required'
-            if (!parameters.database) newErrors.database = 'Database name is required'
+            if (!parameters.username?.trim()) newErrors.username = 'Username is required'
+            if (!parameters.password?.trim()) newErrors.password = 'Password is required'
+            if (!parameters.database?.trim()) newErrors.database = 'Database name is required'
         }
 
         setErrors(newErrors)
@@ -115,9 +71,12 @@ export function DatabaseConnectionForm() {
                 body: JSON.stringify(formData),
             })
 
-            const result = await response.json()
+            if (!response.ok) {
+                const error = await response.json()
+                throw new Error(error.message || 'Connection failed')
+            }
 
-            if (!response.ok) throw new Error(result.error || 'Connection failed')
+            const result = await response.json()
 
             toast({
                 title: 'Success',
@@ -130,7 +89,7 @@ export function DatabaseConnectionForm() {
         } catch (error) {
             toast({
                 title: 'Error',
-                description: error instanceof Error ? error.message : 'Connection failed',
+                description: error instanceof Error ? error.message : 'Failed to connect to database',
                 variant: 'destructive',
             })
         } finally {
@@ -138,60 +97,46 @@ export function DatabaseConnectionForm() {
         }
     }
 
-    const handleTypeChange = (type: DatabaseType) => {
+    const updateFormData = (updates: Partial<DatabaseConnectionConfig>) => {
         setFormData(prev => {
-            if (prev.method === 'parameters') {
+            if (prev.method === 'parameters' && 'parameters' in updates) {
                 return {
                     ...prev,
-                    type,
-                    parameters: {
-                        ...prev.parameters,
-                        port: PORT_MAP[type]
-                    }
-                }
+                    ...updates,
+                    method: prev.method,
+                    parameters: { ...prev.parameters, ...(updates.parameters as Partial<ConnectionParameters>) }
+                } as DatabaseConnectionConfig;
             }
-            return {
-                type,
-                method: 'url',
-                connectionString: prev.connectionString
-            }
-        })
+            return { ...prev, ...updates } as DatabaseConnectionConfig;
+        });
+    };
+
+    const handleTypeChange = (type: DatabaseType) => {
+        updateFormData(formData.method === 'parameters' 
+            ? { type, parameters: { ...formData.parameters, port: DATABASE_CONFIG.PORT_MAP[type] }}
+            : { type })
     }
 
     const handleMethodChange = (method: ConnectionMethod) => {
-        if (method === 'url') {
-            setFormData({
-                type: formData.type,
-                method: 'url',
-                connectionString: ''
-            })
-        } else {
-            setFormData({
-                type: formData.type,
-                method: 'parameters',
+        updateFormData(method === 'url' 
+            ? { method, connectionString: '' }
+            : {
+                method,
                 parameters: {
                     host: 'localhost',
-                    port: PORT_MAP[formData.type],
+                    port: DATABASE_CONFIG.PORT_MAP[formData.type],
                     username: '',
                     password: '',
                     database: ''
                 }
             })
-        }
     }
 
-    const handleParameterChange = (
-        key: keyof ConnectionParameters,
-        value: string | number
-    ) => {
+    const handleParameterChange = (key: keyof ConnectionParameters, value: string | number) => {
         if (formData.method === 'parameters') {
-            setFormData(prev => ({
-                ...prev,
-                parameters: {
-                    ...prev.parameters,
-                    [key]: value
-                }
-            }))
+            updateFormData({
+                parameters: { ...formData.parameters, [key]: value }
+            })
         }
     }
 
@@ -208,31 +153,10 @@ export function DatabaseConnectionForm() {
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Database Type
-                            </label>
-                            <Select
-                                onValueChange={handleTypeChange}
-                                value={formData.type}
-                            >
-                                <SelectTrigger className="bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200">
-                                    <SelectValue placeholder="Select database type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.keys(PORT_MAP).map((type) => (
-                                        <SelectItem key={type} value={type}>
-                                            <div className="flex items-center gap-2">
-                                                <DatabaseIcon className="h-4 w-4 text-muted-foreground" />
-                                                {/* <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-300">
-                                                </div> */}
-                                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <DatabaseTypeSelect 
+                            value={formData.type}
+                            onChange={handleTypeChange}
+                        />
 
                         <Tabs
                             defaultValue="parameters"
@@ -248,95 +172,22 @@ export function DatabaseConnectionForm() {
                                 </TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="parameters" className="space-y-6">
-                                {formData.method === 'parameters' && (
-                                    <div className="grid gap-6">
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <FormInput
-                                                label="Host"
-                                                placeholder="localhost"
-                                                value={formData.parameters.host}
-                                                onChange={(e) => handleParameterChange('host', e.target.value)}
-                                                error={errors.host}
-                                                icon={ServerIcon}
-
-                                            />
-                                            <FormInput
-                                                label="Port"
-                                                type="number"
-                                                value={formData.parameters.port}
-                                                onChange={(e) => handleParameterChange('port', parseInt(e.target.value) || 0)}
-                                                error={errors.port}
-                                                icon={Cable}
-                                            />
-                                        </div>
-
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <FormInput
-                                                label="Username"
-                                                value={formData.parameters.username}
-                                                onChange={(e) => handleParameterChange('username', e.target.value)}
-                                                error={errors.username}
-                                                icon={UserIcon}
-                                            />
-                                            <div className="space-y-2">
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                    Password
-                                                </label>
-                                                <div className="relative">
-                                                    <KeyIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-300 h-4 w-4" />
-                                                    <Input
-                                                        type={showPassword ? "text" : "password"}
-                                                        value={formData.parameters.password}
-                                                        onChange={(e) => handleParameterChange('password', e.target.value)}
-                                                        className={`${errors.password ? 'border-red-500' : ''} pl-9 pr-10 bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200`}
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="absolute right-0 top-0 h-full px-3 py-2"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                    >
-                                                        {showPassword ? (
-                                                            <EyeOff className="h-4 w-4" />
-                                                        ) : (
-                                                            <Eye className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                                {errors.password && (
-                                                    <p className="text-sm text-red-500">{errors.password}</p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <FormInput
-                                            label="Database Name"
-                                            value={formData.parameters.database}
-                                            onChange={(e) => handleParameterChange('database', e.target.value)}
-                                            error={errors.database}
-                                            icon={DatabaseIcon}
-                                        />
-                                    </div>
-                                )}
-                            </TabsContent>
-
-                            <TabsContent value="url">
-                                {formData.method === 'url' && (
-                                    <FormInput
-                                        label="Connection String"
-                                        placeholder={CONNECTION_STRING_TEMPLATES[formData.type]}
-                                        value={formData.connectionString}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            connectionString: e.target.value
-                                        }))}
-                                        error={errors.connectionString}
-                                        icon={Link2Icon}
-                                    />
-                                )}
-                            </TabsContent>
+                            {formData.method === 'parameters' ? (
+                                <ParametersForm
+                                    formData={formData}
+                                    errors={errors}
+                                    showPassword={showPassword}
+                                    onTogglePassword={() => setShowPassword(!showPassword)}
+                                    onParameterChange={handleParameterChange}
+                                />
+                            ) : (
+                                <URLForm
+                                    connectionString={formData.connectionString}
+                                    error={errors.connectionString}
+                                    template={DATABASE_CONFIG.CONNECTION_STRING_TEMPLATES[formData.type]}
+                                    onChange={(value) => updateFormData({ connectionString: value })}
+                                />
+                            )}
                         </Tabs>
                     </div>
 
@@ -360,5 +211,133 @@ export function DatabaseConnectionForm() {
                 </form>
             </CardContent>
         </Card>
+    )
+}
+
+// Separate components for better organization
+function DatabaseTypeSelect({ value, onChange }: { 
+    value: DatabaseType, 
+    onChange: (type: DatabaseType) => void 
+}) {
+    return (
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Database Type
+            </label>
+            <Select onValueChange={onChange} value={value}>
+                <SelectTrigger className="bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200">
+                    <SelectValue placeholder="Select database type" />
+                </SelectTrigger>
+                <SelectContent>
+                    {Object.keys(DATABASE_CONFIG.PORT_MAP).map((type) => (
+                        <SelectItem key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+    )
+}
+
+function ParametersForm({ 
+    formData, 
+    errors, 
+    showPassword, 
+    onTogglePassword, 
+    onParameterChange 
+}: {
+    formData: DatabaseConnectionConfig & { method: 'parameters' },
+    errors: Partial<Record<keyof ConnectionParameters, string>>,
+    showPassword: boolean,
+    onTogglePassword: () => void,
+    onParameterChange: (key: keyof ConnectionParameters, value: string | number) => void
+}) {
+    return (
+        <TabsContent value="parameters" className="space-y-6">
+            <div className="grid gap-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <DatabaseFormInput
+                        label="Host"
+                        value={formData.parameters.host}
+                        onChange={(e) => onParameterChange('host', e.target.value)}
+                        error={errors.host}
+                        placeholder="localhost"
+                    />
+                    <DatabaseFormInput
+                        label="Port"
+                        type="number"
+                        value={formData.parameters.port}
+                        onChange={(e) => onParameterChange('port', parseInt(e.target.value) || 0)}
+                        error={errors.port}
+                    />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <DatabaseFormInput
+                        label="Username"
+                        value={formData.parameters.username}
+                        onChange={(e) => onParameterChange('username', e.target.value)}
+                        error={errors.username}
+                    />
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <Input
+                                type={showPassword ? "text" : "password"}
+                                value={formData.parameters.password}
+                                onChange={(e) => onParameterChange('password', e.target.value)}
+                                className={`${errors.password ? 'border-red-500' : ''} pr-10`}
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2"
+                                onClick={onTogglePassword}
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                        {errors.password && (
+                            <p className="text-sm text-red-500">{errors.password}</p>
+                        )}
+                    </div>
+                </div>
+
+                <DatabaseFormInput
+                    label="Database Name"
+                    value={formData.parameters.database}
+                    onChange={(e) => onParameterChange('database', e.target.value)}
+                    error={errors.database}
+                />
+            </div>
+        </TabsContent>
+    )
+}
+
+function URLForm({ 
+    connectionString, 
+    error, 
+    template, 
+    onChange 
+}: {
+    connectionString: string,
+    error?: string,
+    template: string,
+    onChange: (value: string) => void
+}) {
+    return (
+        <TabsContent value="url">
+            <DatabaseFormInput
+                label="Connection String"
+                placeholder={template}
+                value={connectionString}
+                onChange={(e) => onChange(e.target.value)}
+                error={error}
+            />
+        </TabsContent>
     )
 }
