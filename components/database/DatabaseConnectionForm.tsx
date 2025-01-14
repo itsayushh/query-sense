@@ -27,9 +27,6 @@ const DEFAULT_VALUES:DatabaseConnectionConfig = {
         database: '',
     }
 }
-type FormDataUpdates = 
-    | (Partial<Omit<ParametersConnectionConfig, 'parameters'>> & { parameters?: Partial<ConnectionParameters> })
-    | (Partial<UrlConnectionConfig>)
 
 export function DatabaseConnectionForm() {
     const router = useRouter()
@@ -45,7 +42,6 @@ export function DatabaseConnectionForm() {
             if (!formData.connectionString?.trim()) {
                 newErrors.connectionString = 'Connection string is required'
             }
-            // Add URL format validation if needed
         } else {
             const { parameters } = formData
             if (!parameters.host?.trim()) newErrors.host = 'Host is required'
@@ -77,15 +73,16 @@ export function DatabaseConnectionForm() {
             }
 
             const result = await response.json()
+            if(!result.success){
+                throw new Error(result.message || 'Connection failed')
+            }
 
             toast({
                 title: 'Success',
                 description: 'Database connected successfully',
             })
 
-            router.push(`/databases/view?${new URLSearchParams({
-                tables: JSON.stringify(result.tables),
-            })}`)
+            router.push(`/databases/view`)
         } catch (error) {
             toast({
                 title: 'Error',

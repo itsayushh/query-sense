@@ -7,19 +7,23 @@ import { DatabaseFactory } from '@/lib/database/factory'
 export async function POST(request: Request) {
   let connection: any = null
   let config = null
+  const dbManager = DatabaseManager.getInstance()
   
   try {
-    const { prompt, tables } = await request.json()
+    const { prompt } = await request.json()
     config = await getStoredCredentials()
-    
     if (!config) {
       throw new Error('Database connection not found')
     }
-
-    const connResult = await DatabaseManager.establishConnection(config)
+    
+    
+    const connResult = await dbManager.establishConnection(config)
     if (!connResult.success) {
       throw new Error(connResult.error)
     }
+    const tables = await dbManager.getTables(config.type, connResult.connection)
+    
+
     
     connection = connResult.connection
     const dbConnection = DatabaseFactory.getConnection(config.type)
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
     )
   } finally {
     if (connection && config) {
-      await DatabaseManager.closeConnection(config.type, connection)
+      await dbManager.closeConnection(config.type, connection)
     }
   }
 }

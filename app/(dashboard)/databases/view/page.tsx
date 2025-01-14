@@ -4,19 +4,8 @@ import { DatabaseInfo } from '@/components/database/database-info'
 import { DatabasePrompt } from '@/components/database/database-prompt'
 import { Skeleton } from '@/components/ui/skeleton'
 
-// Enhanced DatabasePage Component
-interface DatabasePageProps {
-  searchParams: {
-    tables?: string
-    type?: string
-    host?: string
-    port?: string
-    database?: string
-  }
-}
 
-export default async function DatabasePage({ searchParams }: {searchParams: {tables: string}}) {   
-  const tables = await searchParams ? JSON.parse(searchParams.tables) : []
+export default async function DatabasePage() {   
   
   return (
     <div className="container mx-auto p-6 space-y-8 bg-primary/10">
@@ -31,9 +20,7 @@ export default async function DatabasePage({ searchParams }: {searchParams: {tab
       <div className="grid gap-8">
         <div className="space-y-8">
           <Suspense fallback={<DatabaseInfoSkeleton />}>
-            <DatabaseInfo 
-              tables={tables}
-            />
+            <DatabaseInfo />
           </Suspense>
           <DatabasePrompt />
         </div>

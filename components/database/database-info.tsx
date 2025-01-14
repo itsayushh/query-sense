@@ -3,17 +3,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Badge } from "../ui/badge"
 import { ScrollArea } from "../ui/scroll-area"
 import { getStoredCredentials } from "@/utils/sessionStore"
+import { toast } from "@/hooks/use-toast"
+import { table } from "console"
 
-interface DatabaseInfoProps {
-    type?: string
-    host?: string
-    port?: string
-    database?: string
-    tables: string[]
+
+async function getDatabaseTables(){
+    try {
+        const dbCredientials = await getStoredCredentials();
+        const response = await fetch('http://localhost:3000/api/database/table', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dbCredientials),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.message || 'Connection failed')
+        }
+
+        const result = await response.json() 
+        return result
+    } catch (error) {
+        return JSON.stringify({
+            success:false,
+            message: error || 'Connection failed',
+            tables: []
+        })
+    }
 }
 
-export async function DatabaseInfo({ tables }: { tables: string[] }) {
+export async function DatabaseInfo() {
     const db = await getStoredCredentials();
+    const result = await getDatabaseTables();
+    const tab = result.tables || [];
     return (
         <Card className="border-border/40">
             <CardHeader className="border-b border-border/40">
@@ -55,13 +77,13 @@ export async function DatabaseInfo({ tables }: { tables: string[] }) {
                         <TableIcon className="h-4 w-4 text-primary" />
                         Available Tables
                         <Badge variant="outline" className="ml-2">
-                            {tables.length}
+                            {tab.length}
                         </Badge>
                     </h3>
                     <ScrollArea
                         className="h-[200px] rounded-md border">
                         <div className="divide-y">
-                            {tables.map((table) => (
+                            {tab.length>0 && tab.map((table:string) => (
                                 <div
                                     key={table}
                                     className="p-3 hover:bg-muted/50 transition-colors cursor-pointer flex items-center gap-2"

@@ -8,6 +8,7 @@ export async function POST(request: Request) {
   try {
     const config: DatabaseConnectionConfig = await request.json()
     const result = await dbManager.establishConnection(config)
+    const tables = await dbManager.getTables(config.type, result.connection);
     
     if (!result.success) {
       throw new Error(result.error)
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Connection successful',
+      tables: tables
     })
   } catch (error) {
     return NextResponse.json(
