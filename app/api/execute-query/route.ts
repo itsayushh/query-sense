@@ -31,8 +31,12 @@ export async function POST(request: Request) {
     
     const queryGenerator = new QueryGenerator(process.env.GEMINI_API_KEY!)
     const sqlQuery = await queryGenerator.generateQuery(config, schemas, prompt)
+    const result = await dbConnection.executeQuery(connection, sqlQuery)
+    if (!result.success) {
+      throw new Error(result.error)
+    }
 
-    return NextResponse.json({ success: true, query: sqlQuery })
+    return NextResponse.json({ success: true, query: sqlQuery , data: result.data })
   } catch (error) {
     return NextResponse.json(
       {
