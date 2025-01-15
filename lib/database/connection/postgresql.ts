@@ -63,4 +63,13 @@ export class PostgresConnection extends DatabaseConnection {
               };
             }));
   }
+  async executeQuery(connection: Client, query: string) {
+    try {
+      const cleanedQuery = query.trim().replace('```sql', '').replace('```', '');
+      const result = await connection.query(cleanedQuery);
+      return { success: true, data: result.rows }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to execute query' }
+    }
+  }
 }

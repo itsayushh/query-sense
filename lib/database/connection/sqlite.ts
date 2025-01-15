@@ -51,4 +51,13 @@ export class SQLiteConnection extends DatabaseConnection {
           }
         }))
   }
+  async executeQuery(connection: sqlite3.Database, query: string) {
+    try {
+      const cleanedQuery = query.trim().replace('```sql', '').replace('```', '');
+      const res = await promisify(connection.all.bind(connection))(cleanedQuery);
+      return {success: true, data: res}
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to execute query' }
+    }
+  }
 }

@@ -5,4 +5,5 @@ export abstract class DatabaseConnection {
     abstract disconnect(connection: any): Promise<void>
     abstract getTables(connection: any): Promise<string[]>
     abstract getTableSchema(connection: any, tables: string[]): Promise<TableSchema[]>
+    abstract executeQuery(connection: any, query: string): Promise<any>
   }
