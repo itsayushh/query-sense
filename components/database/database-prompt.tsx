@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { AlertCircle, Code2, Copy, PlayCircle, RotateCcw, Sparkles, Table, History, CheckCircle2, Download } from 'lucide-react'
+import { AlertCircle, Code2, Copy, PlayCircle, RotateCcw, Sparkles, Table, History, CheckCircle2, Download, Bot } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
@@ -49,7 +49,7 @@ export function DatabasePrompt() {
         const headers = getColumnHeaders(tableResult)
         const csvContent = [
             headers.join(','),
-            ...tableResult.map(row => 
+            ...tableResult.map(row =>
                 headers.map(header => JSON.stringify(row[header])).join(',')
             )
         ].join('\n')
@@ -114,33 +114,46 @@ export function DatabasePrompt() {
     }
 
     return (
-        <div className="space-y-6">
-            <Card className="border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader className="space-y-2">
-                    <CardTitle className="flex items-center gap-2 text-2xl font-bold">
-                        <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-                        AI Query Assistant
-                    </CardTitle>
-                    <CardDescription className="text-base text-muted-foreground">
-                        Transform natural language into powerful SQL queries
-                    </CardDescription>
+        <div className="relative">
+            <Card className="border-primary/20 bg-background">
+                <CardHeader className="space-y-4 pb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-12 h-12">
+                            {/* <div className="absolute inset-0 bg-primary/20 rounded-xl blur-xl" /> */}
+                            <div className="relative h-full rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
+                                <Bot className="h-6 w-6 text-primary" />
+                            </div>
+                        </div>
+                        <div>
+                            <CardTitle className="text-2xl font-bold">AI Query Assistant</CardTitle>
+                            <CardDescription className="text-base">
+                                Transform natural language into powerful SQL queries
+                            </CardDescription>
+                        </div>
+                    </div>
                 </CardHeader>
+
                 <CardContent className="space-y-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="relative group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-lg blur-lg transition-opacity duration-200 opacity-0 group-hover:opacity-100" />
                             <Textarea
                                 placeholder="What insights would you like to discover? Try: 'Show me the top 10 customers by revenue in the last quarter'"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                className="min-h-[120px] text-lg leading-relaxed resize-none transition-all duration-200 focus:shadow-md focus:border-primary"
+                                className="min-h-[120px] text-lg leading-relaxed resize-none
+                                bg-background/30 hover:bg-background/40 focus:bg-background/50
+                                border-border/40 hover:border-border/60 focus:border-primary
+                                backdrop-blur-sm shadow-sm
+                                transition-all duration-200"
                             />
                             {prompt && (
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                     onClick={() => setPrompt('')}
+                                    className="absolute top-2 right-2 text-muted-foreground/60 hover:text-muted-foreground"
                                 >
                                     <RotateCcw className="h-4 w-4" />
                                 </Button>
@@ -151,7 +164,9 @@ export function DatabasePrompt() {
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="flex-1 h-12 text-lg font-medium transition-all duration-200 hover:scale-[1.02] bg-gradient-to-r from-primary to-primary/80"
+                                className="flex-1 h-12 text-lg font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70
+                                shadow-lg hover:shadow-xl
+                                transition-all duration-300 hover:scale-[1.02]"
                             >
                                 {isLoading ? (
                                     <>
@@ -169,9 +184,9 @@ export function DatabasePrompt() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="group relative hover:bg-muted/50"
+                                    className="group relative px-4"
                                 >
-                                    <History className="h-5 w-5" />
+                                    <History className="h-5 w-5 text-primary" />
                                     <Badge className="ml-2 bg-primary/20 text-primary">
                                         {queryHistory.length}
                                     </Badge>
@@ -180,145 +195,137 @@ export function DatabasePrompt() {
                         </div>
                     </form>
 
+                    {/* Query Results Section */}
+                    {generatedQuery && (
+                        <div className="mt-8 space-y-6">
+                            <Tabs defaultValue="query" className="w-full">
+                                <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1">
+                                    <TabsTrigger
+                                        value="query"
+                                        className="data-[state=active]:bg-background"
+                                    >
+                                        <Code2 className="h-4 w-4 mr-2" />
+                                        SQL Query
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="results"
+                                        className="data-[state=active]:bg-background"
+                                    >
+                                        <Table className="h-4 w-4 mr-2" />
+                                        Results
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="query" className="mt-4">
+                                    <div className="rounded-lg border border-border/40 overflow-hidden">
+                                        <div className="bg-muted/30 p-3 flex justify-between items-center border-b border-border/40">
+                                            <div className="flex items-center gap-2">
+                                                <Code2 className="h-4 w-4 text-primary" />
+                                                <span className="font-medium">Generated SQL</span>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={handleCopyQuery}
+                                                className="hover:bg-background/50"
+                                            >
+                                                {copySuccess ? (
+                                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                ) : (
+                                                    <Copy className="h-4 w-4" />
+                                                )}
+                                            </Button>
+                                        </div>
+                                        <pre className="p-4 overflow-x-auto bg-secondary/30">
+                                            <code className="text-sm font-spaceMono">{generatedQuery}</code>
+                                        </pre>
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="results" className="space-y-4">
+                                    <div className="flex justify-between items-center mb-4 ">
+                                        <div className="flex items-center gap-2">
+                                            <Table className="h-4 w-4 text-primary" />
+                                            <h3 className="font-semibold">Query Results</h3>
+                                            {tableResult.length > 0 && (
+                                                <Badge variant="secondary">
+                                                    {tableResult.length} {tableResult.length === 1 ? 'row' : 'rows'}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {tableResult.length > 0 && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={exportToCSV}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Download className="h-4 w-4" />
+                                                Export CSV
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="rounded-lg border border-border/40 shadow-sm bg-muted/30 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm ">
+                                                {tableResult.length > 0 ? (
+                                                    <>
+                                                        <thead className="bg-muted/90">
+                                                            <tr>
+                                                                {getColumnHeaders(tableResult).map((header) => (
+                                                                    <th
+                                                                        key={header}
+                                                                        className="px-6 py-4 text-left font-spaceMono text-base"
+                                                                    >
+                                                                        {formatColumnHeader(header)}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-border/40">
+                                                            {tableResult.map((row, rowIndex) => (
+                                                                <tr
+                                                                    key={rowIndex}
+                                                                    className="hover:bg-muted/30 transition-colors"
+                                                                >
+                                                                    {getColumnHeaders(tableResult).map((header) => (
+                                                                        <td
+                                                                            key={`${rowIndex}-${header}`}
+                                                                            className="px-6 py-4 whitespace-nowrap"
+                                                                        >
+                                                                            <div className="max-w-xs truncate">
+                                                                                {formatCellValue(row[header])}
+                                                                            </div>
+                                                                        </td>
+                                                                    ))}
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </>
+                                                ) : (
+                                                    <tbody>
+                                                        <tr>
+                                                            <td className="px-6 py-8 text-center text-muted-foreground">
+                                                                No results to display. Execute the query to see data.
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                )}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+                    )}
+
                     {!generatedQuery && !isLoading && (
-                        <Alert className="bg-muted/50 border-primary/20">
+                        <Alert className="bg-primary/5 border-primary/20">
                             <AlertCircle className="h-5 w-5 text-primary" />
                             <AlertDescription className="text-base">
                                 Be specific in your query description for better results. Include timeframes, conditions, and desired outputs.
                             </AlertDescription>
                         </Alert>
-                    )}
-
-                    {generatedQuery && (
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-                                <TabsTrigger
-                                    value="query"
-                                    className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                                >
-                                    <Code2 className="h-4 w-4" />
-                                    SQL Query
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="result"
-                                    className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                                >
-                                    <Table className="h-4 w-4" />
-                                    Results
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="query" className="space-y-5">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="font-semibold flex items-center gap-2">
-                                        <Code2 className="h-4 w-4 text-primary" />
-                                        Generated SQL
-                                    </h3>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={handleCopyQuery}
-                                            className="hover:bg-primary/10"
-                                        >
-                                            {copySuccess ? (
-                                                <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                                            ) : (
-                                                <Copy className="h-4 w-4 mr-2" />
-                                            )}
-                                            {copySuccess ? 'Copied!' : 'Copy'}
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="default"
-                                            className="bg-primary hover:bg-primary/90"
-                                        >
-                                            <PlayCircle className="h-4 w-4 mr-2" />
-                                            Execute
-                                        </Button>
-                                    </div>
-                                </div>
-                                <pre className="bg-muted/30 p-6 rounded-lg overflow-x-auto text-sm border border-border/40 transition-all duration-200 hover:shadow-md">
-                                    <code className="font-mono text-sm">
-                                        {generatedQuery}
-                                    </code>
-                                </pre>
-                            </TabsContent>
-
-                            <TabsContent value="result" className="space-y-4">
-                            <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                        <Table className="h-4 w-4 text-primary" />
-                        <h3 className="font-semibold">Query Results</h3>
-                        {tableResult.length > 0 && (
-                            <Badge variant="secondary">
-                                {tableResult.length} {tableResult.length === 1 ? 'row' : 'rows'}
-                            </Badge>
-                        )}
-                    </div>
-                    {tableResult.length > 0 && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={exportToCSV}
-                            className="flex items-center gap-2"
-                        >
-                            <Download className="h-4 w-4" />
-                            Export CSV
-                        </Button>
-                    )}
-                </div>
-                <div className="rounded-lg border border-border/40 shadow-sm bg-muted/30 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            {tableResult.length > 0 ? (
-                                <>
-                                    <thead className="bg-muted/90">
-                                        <tr>
-                                            {getColumnHeaders(tableResult).map((header) => (
-                                                <th
-                                                    key={header}
-                                                    className="px-6 py-4 text-left font-semibold whitespace-nowrap"
-                                                >
-                                                    {formatColumnHeader(header)}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/40">
-                                        {tableResult.map((row, rowIndex) => (
-                                            <tr
-                                                key={rowIndex}
-                                                className="hover:bg-muted/30 transition-colors"
-                                            >
-                                                {getColumnHeaders(tableResult).map((header) => (
-                                                    <td
-                                                        key={`${rowIndex}-${header}`}
-                                                        className="px-6 py-4 whitespace-nowrap"
-                                                    >
-                                                        <div className="max-w-xs truncate">
-                                                            {formatCellValue(row[header])}
-                                                        </div>
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </>
-                            ) : (
-                                <tbody>
-                                    <tr>
-                                        <td className="px-6 py-8 text-center text-muted-foreground">
-                                            No results to display. Execute the query to see data.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            )}
-                        </table>
-                    </div>
-                </div>
-                            </TabsContent>
-                        </Tabs>
                     )}
                 </CardContent>
             </Card>

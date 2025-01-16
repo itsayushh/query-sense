@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { DatabaseZapIcon, Eye, EyeOff, Link2Icon } from 'lucide-react'
+import { Cable, DatabaseIcon, DatabaseZapIcon, Eye, EyeOff, Icon, Link2Icon, ServerIcon, UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
@@ -15,8 +15,9 @@ import { DATABASE_CONFIG } from '@/utils/constants'
 import { DatabaseFormInput } from './database-form'
 import { connection } from 'next/server'
 import { set } from 'react-hook-form'
+import { KeyIcon } from 'lucide-react'
 
-const DEFAULT_VALUES:DatabaseConnectionConfig = {
+const DEFAULT_VALUES: DatabaseConnectionConfig = {
     type: 'mysql',
     method: 'parameters',
     parameters: {
@@ -27,6 +28,37 @@ const DEFAULT_VALUES:DatabaseConnectionConfig = {
         database: '',
     }
 }
+
+const FormInput = ({
+    label,
+    error,
+    icon: Icon,
+    ...props
+}: {
+    label: string
+    error?: string
+    icon?: React.ComponentType<any>
+} & React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {label}
+        </label>
+        <div className="relative">
+            {Icon && (
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                    <Icon className="h-4 w-4" />
+                </div>
+            )}
+            <Input
+                {...props}
+                className={`${error ? 'border-red-500' : ''} ${Icon ? 'pl-9' : ''} bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200`}
+            />
+        </div>
+        {error && (
+            <p className="text-sm text-red-500">{error}</p>
+        )}
+    </div>
+)
 
 export function DatabaseConnectionForm() {
     const router = useRouter()
@@ -73,7 +105,7 @@ export function DatabaseConnectionForm() {
             }
 
             const result = await response.json()
-            if(!result.success){
+            if (!result.success) {
                 throw new Error(result.message || 'Connection failed')
             }
 
@@ -109,13 +141,13 @@ export function DatabaseConnectionForm() {
     };
 
     const handleTypeChange = (type: DatabaseType) => {
-        updateFormData(formData.method === 'parameters' 
-            ? { type, parameters: { ...formData.parameters, port: DATABASE_CONFIG.PORT_MAP[type] }}
+        updateFormData(formData.method === 'parameters'
+            ? { type, parameters: { ...formData.parameters, port: DATABASE_CONFIG.PORT_MAP[type] } }
             : { type })
     }
 
     const handleMethodChange = (method: ConnectionMethod) => {
-        updateFormData(method === 'url' 
+        updateFormData(method === 'url'
             ? { method, connectionString: '' }
             : {
                 method,
@@ -138,19 +170,27 @@ export function DatabaseConnectionForm() {
     }
 
     return (
-        <Card className="w-full max-w-3xl mx-auto hover-card glass">
-            <CardHeader className="space-y-4 text-center">
-                <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
-                    <DatabaseZapIcon className="h-8 w-8 text-primary" />
-                </div>
-                <CardTitle className="text-3xl font-bold text-gradient">
-                    Connect to Database
-                </CardTitle>
-            </CardHeader>
+        <Card className="w-[70%] hover-card flex flex-row items-center justify-between p-5 glass">
+            <CardHeader className="space-y-8 text-center py-10 bg-background">
+                    <div className="relative mx-auto w-24 h-24">
+                        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
+                            <DatabaseZapIcon className="h-12 w-12 text-primary" />
+                        </div>
+                    </div>
+                    <div>
+                        <CardTitle className="text-3xl font-semibold tracking-tight">
+                            Connect Database
+                        </CardTitle>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Configure your database connection settings
+                        </p>
+                    </div>
+                </CardHeader>
+
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="space-y-6">
-                        <DatabaseTypeSelect 
+                        <DatabaseTypeSelect
                             value={formData.type}
                             onChange={handleTypeChange}
                         />
@@ -212,37 +252,49 @@ export function DatabaseConnectionForm() {
 }
 
 // Separate components for better organization
-function DatabaseTypeSelect({ value, onChange }: { 
-    value: DatabaseType, 
-    onChange: (type: DatabaseType) => void 
+function DatabaseTypeSelect({ value, onChange }: {
+    value: DatabaseType,
+    onChange: (type: DatabaseType) => void
 }) {
     return (
-        <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <div className="space-y-4">
+            <label className="text-sm font-medium">
                 Database Type
             </label>
-            <Select onValueChange={onChange} value={value}>
-                <SelectTrigger className="bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200">
+            <Select
+                value={value}
+                onValueChange={onChange}
+            >
+                <SelectTrigger className="h-12 w-full bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all duration-300">
                     <SelectValue placeholder="Select database type" />
                 </SelectTrigger>
                 <SelectContent>
-                    {Object.keys(DATABASE_CONFIG.PORT_MAP).map((type) => (
-                        <SelectItem key={type} value={type}>
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </SelectItem>
-                    ))}
+                    <div className="p-2">
+                        {Object.keys(DATABASE_CONFIG.PORT_MAP).map((type) => (
+                            <SelectItem
+                                key={type}
+                                value={type}
+                                className="h-11 rounded-md hover:bg-primary/10 focus:bg-primary/10 transition-colors duration-200"
+                            >
+                                <div className="flex items-center">
+                                    <DatabaseIcon className="w-4 h-4 mr-2 text-primary" />
+                                    <span className="capitalize">{type}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </div>
                 </SelectContent>
             </Select>
         </div>
     )
 }
 
-function ParametersForm({ 
-    formData, 
-    errors, 
-    showPassword, 
-    onTogglePassword, 
-    onParameterChange 
+function ParametersForm({
+    formData,
+    errors,
+    showPassword,
+    onTogglePassword,
+    onParameterChange
 }: {
     formData: DatabaseConnectionConfig & { method: 'parameters' },
     errors: Partial<Record<keyof ConnectionParameters, string>>,
@@ -260,6 +312,7 @@ function ParametersForm({
                         onChange={(e) => onParameterChange('host', e.target.value)}
                         error={errors.host}
                         placeholder="localhost"
+                        icon={ServerIcon}
                     />
                     <DatabaseFormInput
                         label="Port"
@@ -267,6 +320,7 @@ function ParametersForm({
                         value={formData.parameters.port}
                         onChange={(e) => onParameterChange('port', parseInt(e.target.value) || 0)}
                         error={errors.port}
+                        icon={Cable}
                     />
                 </div>
 
@@ -276,17 +330,29 @@ function ParametersForm({
                         value={formData.parameters.username}
                         onChange={(e) => onParameterChange('username', e.target.value)}
                         error={errors.username}
+                        icon={UserIcon}
                     />
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="text-sm font-medium text-muted-foreground">
                             Password
                         </label>
                         <div className="relative">
+                            <KeyIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-foreground h-4 w-4" />
                             <Input
                                 type={showPassword ? "text" : "password"}
                                 value={formData.parameters.password}
                                 onChange={(e) => onParameterChange('password', e.target.value)}
-                                className={`${errors.password ? 'border-red-500' : ''} pr-10`}
+                                className={`
+                                                            h-10 pl-9 pr-10
+                                                            ${errors.password ? 'border-red-500' : 'border-border/50'}
+                                                            bg-background/30
+                                                            backdrop-blur-sm
+                                                            shadow-sm
+                                                            hover:bg-background/40
+                                                            focus:bg-background/50
+                                                            transition-all
+                                                            duration-200
+                                                        `}
                             />
                             <Button
                                 type="button"
@@ -295,31 +361,36 @@ function ParametersForm({
                                 className="absolute right-0 top-0 h-full px-3 py-2"
                                 onClick={onTogglePassword}
                             >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground/60" />
+                                ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground/60" />
+                                )}
                             </Button>
                         </div>
                         {errors.password && (
-                            <p className="text-sm text-red-500">{errors.password}</p>
+                            <p className="text-xs text-red-500 mt-1">{errors.password}</p>
                         )}
                     </div>
-                </div>
 
-                <DatabaseFormInput
-                    label="Database Name"
-                    value={formData.parameters.database}
-                    onChange={(e) => onParameterChange('database', e.target.value)}
-                    error={errors.database}
-                />
+                </div>
+                    <DatabaseFormInput
+                        label="Database Name"
+                        value={formData.parameters.database}
+                        onChange={(e) => onParameterChange('database', e.target.value)}
+                        error={errors.database}
+                        icon={DatabaseIcon}
+                    />
             </div>
-        </TabsContent>
+        </TabsContent >
     )
 }
 
-function URLForm({ 
-    connectionString, 
-    error, 
-    template, 
-    onChange 
+function URLForm({
+    connectionString,
+    error,
+    template,
+    onChange
 }: {
     connectionString: string,
     error?: string,
@@ -327,13 +398,15 @@ function URLForm({
     onChange: (value: string) => void
 }) {
     return (
-        <TabsContent value="url">
+        <TabsContent value="url" className="space-y-6">
+            
             <DatabaseFormInput
                 label="Connection String"
                 placeholder={template}
                 value={connectionString}
                 onChange={(e) => onChange(e.target.value)}
                 error={error}
+                icon={Link2Icon}
             />
         </TabsContent>
     )
