@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Outfit } from "next/font/google";
+import { Geist, Outfit,Space_Grotesk,Space_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,16 +8,20 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
 });
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+const spaceMono = Space_Mono({
+  weight: ["400","700"],
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+});
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -32,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${outfit.variable} ${spaceGrotesk.variable} ${spaceMono.variable} font-spaceGrotesk antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

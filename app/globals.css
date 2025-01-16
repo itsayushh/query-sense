@@ -3,74 +3,65 @@
 @tailwind utilities;
 
 @layer base {
-  
-:root  {
-  --background: 228 48% 95%;
-  --foreground: 228 5% 10%;
-  --card: 228 48% 90%;
-  --card-foreground: 228 5% 15%;
-  --popover: 228 48% 95%;
-  --popover-foreground: 228 95% 10%;
-  --primary: 228 53% 75%;
-  --primary-foreground: 0 0% 0%;
-  --secondary: 228 30% 70%;
-  --secondary-foreground: 0 0% 0%;
-  --muted: 190 30% 85%;
-  --muted-foreground: 228 5% 35%;
-  --accent: 190 30% 80%;
-  --accent-foreground: 228 5% 15%;
-  --destructive: 0 50% 30%;
-  --destructive-foreground: 228 5% 90%;
-  --border: 228 30% 50%;
-  --input: 228 30% 21%;
-  --ring: 228 53% 75%;
-  --radius: 0.75rem;
-}
-.dark  {
-  --background: 228 48% 10%;
-  --foreground: 228 5% 90%;
-  --card: 228 48% 10%;
-  --card-foreground: 228 5% 90%;
-  --popover: 228 48% 5%;
-  --popover-foreground: 228 5% 90%;
-  --primary: 228 53% 75%;
-  --primary-foreground: 0 0% 0%;
-  --secondary: 228 30% 20%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 190 30% 21%;
-  --muted-foreground: 228 5% 60%;
-  --accent: 190 30% 21%;
-  --accent-foreground: 228 5% 90%;
-  --destructive: 0 50% 30%;
-  --destructive-foreground: 228 5% 90%;
-  --border: 228 30% 21%;
-  --input: 228 30% 21%;
-  --ring: 228 53% 75%;
-  --radius: 0.75rem;
-}
-
-
-  .light {
-    /* Light theme with improved contrast and vibrancy */
-    --background: 218 100% 98%;
-    --foreground: 218 5% 10%;
-    --card: 218 50% 97%;
-    --card-foreground: 218 5% 15%;
-    --popover: 218 100% 98%;
-    --popover-foreground: 218 100% 10%;
-    --primary: 218 99% 56%;
+  :root {
+    /* Core Brand Colors - Refined blue palette for enterprise feel */
+    --primary: 215 85% 45%;      /* Deeper, more authoritative blue */
     --primary-foreground: 0 0% 100%;
-    --secondary: 218 30% 85%;
-    --secondary-foreground: 218 5% 10%;
-    --muted: 218 30% 90%;
-    --muted-foreground: 218 5% 35%;
-    --accent: 218 30% 85%;
-    --accent-foreground: 218 5% 15%;
-    --destructive: 0 85% 35%;
-    --destructive-foreground: 218 5% 90%;
-    --border: 218 30% 85%;
-    --input: 218 30% 85%;
-    --ring: 218 99% 56%;
+    
+    /* Secondary Colors - Sophisticated neutrals */
+    --secondary: 215 15% 70%;
+    --secondary-foreground: 215 15% 20%;
+    
+    /* Background Hierarchy */
+    --background: 210 30% 99%;    /* Cleaner white background */
+    --foreground: 215 25% 15%;    /* Sharper text contrast */
+    --card: 210 25% 97%;
+    --card-foreground: 215 25% 15%;
+    --popover: 210 30% 99%;
+    --popover-foreground: 215 25% 15%;
+    
+    /* Accent & Feedback Colors */
+    --accent: 200 65% 45%;       /* Complementary teal for highlights */
+    --accent-foreground: 215 25% 15%;
+    --destructive: 355 75% 45%;  /* More refined red */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* UI Elements */
+    --muted: 215 15% 95%;
+    --muted-foreground: 215 25% 35%;
+    --border: 215 20% 85%;
+    --input: 215 20% 85%;
+    --ring: 215 85% 45%;
+    
+    /* System */
+    --radius: 0.625rem;          /* Slightly reduced radius for professionalism */
+  }
+
+  .dark {
+    /* Dark Mode Optimization */
+    --background: 215 25% 8%;    /* Deeper background for less eye strain */
+    --foreground: 215 15% 95%;
+    --card: 215 25% 12%;
+    --card-foreground: 215 15% 95%;
+    --popover: 215 25% 6%;
+    --popover-foreground: 215 15% 95%;
+    
+    /* Adjusted for dark mode visibility */
+    --primary: 215 85% 55%;      /* Brighter primary for dark mode */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 15% 30%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Dark mode specific adjustments */
+    --muted: 215 15% 20%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 200 65% 50%;
+    --accent-foreground: 215 15% 95%;
+    --destructive: 355 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 15% 25%;
+    --input: 215 15% 25%;
+    --ring: 215 85% 55%;
   }
 }
 
@@ -79,53 +70,49 @@
     @apply border-border;
   }
   
-  /* Improved base styles */
   html {
     @apply antialiased;
     -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
   
   body {
     @apply bg-background text-foreground min-h-screen;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
   }
   
-  /* Typography enhancements */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight;
+    @apply font-bold tracking-tight text-balance;
   }
-
   
-  /* Focus styles */
   :focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background transition-shadow duration-200;
   }
 }
 
-/* Custom utilities */
 @layer utilities {
-  /* Glass effect utility */
   .glass {
-    @apply bg-background/80 backdrop-blur-sm border border-border/50;
+    @apply bg-background/90 backdrop-blur-md border border-border/50 shadow-sm;
   }
   
-  /* Text balance for better typography */
   .text-balance {
     text-wrap: balance;
   }
   
-  /* Gradient text utility */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/90 to-primary/70;
   }
   
-  /* Hover card effect */
   .hover-card {
-    @apply transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg;
+    @apply transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md hover:shadow-primary/5;
+  }
+
+  .enterprise-card {
+    @apply rounded-lg border border-border/50 shadow-sm hover:shadow-md transition-all duration-300;
   }
 }
 
-/* Scrollbar styling */
+/* Enhanced scrollbar styling */
 @media (pointer: fine) {
   .custom-scrollbar {
     scrollbar-width: thin;
@@ -133,8 +120,8 @@
   }
   
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -142,6 +129,10 @@
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-muted rounded-full;
+    @apply bg-muted rounded-full transition-colors duration-200;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
   }
 }

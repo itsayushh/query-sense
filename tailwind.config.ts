@@ -9,6 +9,12 @@ export default {
   ],
   theme: {
   	extend: {
+		fontFamily:{
+			outfit: ['var(--font-outfit)'],
+			geist: ['var(--font-geist-sans)'],
+			spaceGrotesk: ['var(--font-space-grotesk)'],
+			spaceMono: ['var(--font-space-mono)']
+		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
