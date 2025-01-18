@@ -1,31 +1,42 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { DatabaseInfo } from '@/components/database/database-info'
 import { DatabasePrompt } from '@/components/database/database-prompt'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { LogOut, DatabaseZap } from 'lucide-react'
 
 export default function DatabasePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <header className="relative mb-5">
+        {/* Page Header with Action Buttons */}
+        <header className="relative mb-5 flex items-center justify-between">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-4xl blur-3xl" />
           <div className='relative z-10 space-y-4 py-8'>
-          <h1 className="text-4xl font-bold tracking-tight mb-2 text-balance">
-            Database Management
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Connect, query, and analyze your database with AI assistance
-          </p>
-
+            <h1 className="text-4xl font-bold tracking-tight mb-2 text-balance">
+              Database Management
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Connect, query, and analyze your database with AI assistance
+            </p>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="relative z-10 flex gap-3">
+            <Link href="/databases">
+              <Button variant="destructive" size="sm">
+                <LogOut className="mr-2 h-4 w-4" />
+                Disconnect
+              </Button>
+            </Link>
           </div>
         </header>
 
         <div className="grid gap-6 lg:gap-8">
           {/* Database Info Section */}
           <section className="relative">
-            {/* <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg blur-xl" /> */}
             <Suspense fallback={<DatabaseInfoSkeleton />}>
               <DatabaseInfo />
             </Suspense>
@@ -34,7 +45,6 @@ export default function DatabasePage() {
           {/* AI Query Section */}
           <section className="relative">
             <DatabasePrompt />
-            {/* <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg blur-xl" /> */}
           </section>
         </div>
       </div>
