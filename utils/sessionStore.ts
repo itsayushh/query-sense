@@ -4,13 +4,13 @@ import { cookies } from 'next/headers'
 import { DatabaseConnectionConfig, ConnectionParameters, DatabaseType, ConnectionMethod } from '@/types/Database'
 import crypto from 'crypto'
 
-const JWT_SECRET = "supersecret"
-const JWT_EXPIRES_IN = '1h'
+const JWT_SECRET = process.env.JWT_SECRET || 'secret'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '10sec'
 const ENCRYPTION_KEY = crypto.createHash('sha256').update("gfezP+0e/1IxkhvPWnT8okTSbH0ijfsouCx4O3lwyggLOCbQCZysFJdZsu8eKTLN").digest();
 
 // Utility to encrypt sensitive data
 export function encrypt(text: string): { encryptedData: string; iv: string } {
-  const iv = crypto.randomBytes(16); // Corrected to use crypto.randomBytes
+  const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
@@ -65,7 +65,7 @@ export async function storeCredentials(config: DatabaseConnectionConfig): Promis
     .setExpirationTime(JWT_EXPIRES_IN)
     .sign(new TextEncoder().encode(JWT_SECRET));
 
-  (await cookies()).set('db_credentials', token, {
+  (await cookies()).set('db_credentials', token, {  
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
@@ -76,7 +76,6 @@ export async function storeCredentials(config: DatabaseConnectionConfig): Promis
 // Retrieve stored connection config
 export async function getStoredCredentials(): Promise<DatabaseConnectionConfig | null> {
   const token = (await cookies()).get('db_credentials')
-  
   if (!token) return null
   
   try {
@@ -109,7 +108,6 @@ export async function getStoredCredentials(): Promise<DatabaseConnectionConfig |
       }
     }
   } catch (error) {
-    console.error('Error decoding credentials:', error)
     return null
   }
 }
