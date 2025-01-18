@@ -28,12 +28,31 @@ export async function POST(request: Request) {
     connection = connResult.connection
     const dbConnection = DatabaseFactory.getConnection(config.type)
     const schemas = await dbConnection.getTableSchema(connection, tables)
-    
     const queryGenerator = new QueryGenerator(process.env.GEMINI_API_KEY!)
-    const sqlQuery = await queryGenerator.generateQuery(config, schemas, prompt)
-    const result = await dbConnection.executeQuery(connection, sqlQuery)
+    let sqlQuery = await queryGenerator.generateQuery(config, schemas, prompt)
+    let result = await dbConnection.executeQuery(connection, sqlQuery)
+    // If first attempt fails, try with refined context
     if (!result.success) {
-      throw new Error(result.error)
+      // console.log('First attempt failed:', result.error)
+      
+      // Generate refined query using the error message
+      const refinedQuery = await queryGenerator.generateQuery(
+        config,
+        schemas,
+        prompt,
+        { 
+          useRefinedContext: true, 
+          previousError: result.error 
+        }
+      )
+      
+      // Execute refined query
+      result = await dbConnection.executeQuery(connection, refinedQuery)
+      
+      if (!result.success) {
+        throw new Error(`Query execution failed after refinement: ${result.error}`)
+      }
+      sqlQuery = refinedQuery
     }
 
     return NextResponse.json({ success: true, query: sqlQuery , data: result.data })
@@ -45,7 +64,8 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     )
-  } finally {
+  }
+   finally {
     if (connection && config) {
       await dbManager.closeConnection(config.type, connection)
     }
