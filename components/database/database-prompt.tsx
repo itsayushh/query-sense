@@ -82,8 +82,6 @@ export function DatabasePrompt() {
                 body: JSON.stringify({ prompt }),
             })
 
-            if (!response.ok) throw new Error('Failed to execute query')
-
             const data = await response.json()
             if (data.success) {
                 setGeneratedQuery(data.query.replace('```sql', '').replace('```', ''))

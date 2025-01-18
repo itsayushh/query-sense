@@ -57,12 +57,9 @@ export class MySQLConnection extends DatabaseConnection {
   async executeQuery(connection: mysql.Connection, query: string) {
     try {
       const cleanedQuery = query.trim().replace('```sql', '').replace('```', '');
-      console.log('cleanedQuery', cleanedQuery);
       const res = await connection.query(cleanedQuery);
-      console.log('queries', res);
       return { success: true, data: res[0] };
     } catch (err) {
-      console.log(err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to execute query' };
     }
   }
