@@ -5,47 +5,130 @@ import { DatabaseInfo } from '@/components/database/database-info'
 import { DatabasePrompt } from '@/components/database/database-prompt'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { LogOut, DatabaseZap } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { 
+  LogOut, 
+  Database, 
+  ChevronRight, 
+  Settings,
+  History,
+  Code2,
+  TableProperties
+} from 'lucide-react'
+import { getStoredCredentials } from '@/utils/sessionStore'
 
-export default function DatabasePage() {
+export default async function DatabasePage() {
+  const dbCredientials = await getStoredCredentials();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header with Action Buttons */}
-        <header className="relative mb-5 flex items-center justify-between">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-4xl blur-3xl" />
-          <div className='relative z-10 space-y-4 py-8'>
-            <h1 className="text-4xl font-bold tracking-tight mb-2 text-balance">
-              Database Management
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Connect, query, and analyze your database with AI assistance
-            </p>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/98 to-background/95">
+      <div className="max-w-8xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div className="py-3">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Database className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl font-bold">{dbCredientials?.type.toUpperCase()} Database</h1>
+                <div className="px-3 py-1 bg-primary/10 rounded-full">
+                  <span className="text-sm font-medium text-primary">Connected</span>
+                </div>
+              </div>
+              <p className="text-muted-foreground">
+                {dbCredientials?.method === 'parameters' ? (
+                  <>
+                    {dbCredientials.parameters.host}:{dbCredientials.parameters.port}/{dbCredientials.parameters.database}
+                  </>
+                ) : (
+                  <>
+                    {dbCredientials?.connectionString}
+                  </>
+                ) 
+                }
+              </p>
+            </div>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="relative z-10 flex gap-3">
-            <Link href="/databases">
-              <Button variant="destructive" size="sm">
-                <LogOut className="mr-2 h-4 w-4" />
-                Disconnect
-              </Button>
-            </Link>
-          </div>
-        </header>
 
-        <div className="grid gap-6 lg:gap-8">
-          {/* Database Info Section */}
-          <section className="relative">
-            <Suspense fallback={<DatabaseInfoSkeleton />}>
-              <DatabaseInfo />
-            </Suspense>
-          </section>
+          {/* Main Tabs Interface */}
+          <Tabs defaultValue="query" className="space-y-5">
+            <TabsList className="bg-background border-b border-border/40 w-full justify-start h-12 rounded-none gap-10">
+              <TabsTrigger 
+                value="query" 
+                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
+              >
+                <Code2 className="mr-2 h-4 w-4" />
+                Query Assistant
+              </TabsTrigger>
+              <TabsTrigger 
+                value="schema" 
+                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
+              >
+                <TableProperties className="mr-2 h-4 w-4" />
+                Schema Explorer
+              </TabsTrigger>
+              <TabsTrigger 
+                value="history" 
+                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
+              >
+                <History className="mr-2 h-4 w-4" />
+                Query History
+              </TabsTrigger>
+              <TabsTrigger 
+                value="settings" 
+                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Connection Settings
+              </TabsTrigger>
+            </TabsList>
 
-          {/* AI Query Section */}
-          <section className="relative">
-            <DatabasePrompt />
-          </section>
+            {/* Query Assistant Tab */}
+            <TabsContent value="query" className="space-y-6 mt-6">
+              <div className="grid grid-cols-12 gap-6">
+                {/* Left Sidebar - Database Info */}
+                <div className="col-span-3">
+                  <Suspense fallback={<DatabaseInfoSkeleton />}>
+                    <DatabaseInfo />
+                  </Suspense>
+                </div>
+                
+                {/* Main Content - Query Interface */}
+                <div className="col-span-9">
+                  <DatabasePrompt />
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Schema Explorer Tab */}
+            <TabsContent value="schema">
+              <Card className="border-primary/20">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Database Schema</h3>
+                  {/* Add Schema Explorer Component Here */}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Query History Tab */}
+            <TabsContent value="history">
+              <Card className="border-primary/20">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Recent Queries</h3>
+                  {/* Add Query History Component Here */}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Connection Settings Tab */}
+            <TabsContent value="settings">
+              <Card className="border-primary/20">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Database Connection Settings</h3>
+                  {/* Add Connection Settings Component Here */}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
@@ -54,36 +137,13 @@ export default function DatabasePage() {
 
 function DatabaseInfoSkeleton() {
   return (
-    <Card className="relative overflow-hidden border-primary/20">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-      <CardHeader className="border-b border-border/40 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <Skeleton className="h-6 w-[200px]" />
-        </div>
-      </CardHeader>
-      <CardContent className="grid gap-8 p-6 md:grid-cols-2">
-        <div className="space-y-6">
-          <Skeleton className="h-6 w-[150px]" />
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-6 w-[100px]" />
-                <Skeleton className="h-6 w-[150px] bg-primary/10" />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-6">
-          <Skeleton className="h-6 w-[150px]" />
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-10 w-full bg-primary/10" />
-              </div>
-            ))}
-          </div>
+    <Card className="border-primary/20">
+      <CardContent className="p-4 space-y-4">
+        <Skeleton className="h-6 w-24" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
         </div>
       </CardContent>
     </Card>

@@ -112,221 +112,196 @@ export function DatabasePrompt() {
     }
 
     return (
-        <div className="relative">
-            <Card className="border-primary/20 bg-background">
-                <CardHeader className="space-y-4 pb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-12">
-                            {/* <div className="absolute inset-0 bg-primary/20 rounded-xl blur-xl" /> */}
-                            <div className="relative h-full rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
-                                <Bot className="h-6 w-6 text-primary" />
-                            </div>
-                        </div>
-                        <div>
-                            <CardTitle className="text-2xl font-bold">AI Query Assistant</CardTitle>
-                            <CardDescription className="text-base">
-                                Transform natural language into powerful SQL queries
-                            </CardDescription>
-                        </div>
+        <div className="space-y-5">
+            {/* Hero Section with Improved Visual Hierarchy */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-transparent p-5">
+                <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
+                    <div className="absolute inset-0 bg-gradient-to-l from-primary/20 to-transparent" />
+                </div>
+
+                <div className="relative flex items-start gap-6">
+                    <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                        <Bot className="h-7 w-7 text-primary" />
                     </div>
-                </CardHeader>
+                    <div className="flex-1 space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">AI Query Assistant</h1>
+                        <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                            Transform your questions into powerful SQL queries using natural language.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-                <CardContent className="space-y-6">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="relative group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-lg blur-lg transition-opacity duration-200 opacity-0 group-hover:opacity-100" />
-                            <Textarea
-                                placeholder="What insights would you like to discover? Try: 'Show me the top 10 customers by revenue in the last quarter'"
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                className="min-h-[120px] text-lg leading-relaxed resize-none
-                                bg-background/30 hover:bg-background/40 focus:bg-background/50
-                                border-border/40 hover:border-border/60 focus:border-primary
-                                backdrop-blur-sm shadow-sm
-                                transition-all duration-200"
-                            />
-                            {prompt && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setPrompt('')}
-                                    className="absolute top-2 right-2 text-muted-foreground/60 hover:text-muted-foreground"
-                                >
-                                    <RotateCcw className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </div>
+            {/* Main Query Interface */}
+            <Card className="border-primary/10 shadow-lg">
+                <CardContent className="p-6 space-y-6">
+                    {/* Query Input */}
+                    <div className="relative">
+                        <Textarea
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="What insights would you like to discover? Try: 'Show me the top 10 customers by revenue in the last quarter'"
+                            className="min-h-[120px] text-lg leading-relaxed p-6 rounded-xl
+                bg-muted/30 border-primary/10 focus:border-primary/20
+                shadow-sm transition-all duration-200"
+                        />
 
-                        <div className="flex gap-3">
+                        {prompt && (
                             <Button
-                                type="submit"
-                                disabled={isLoading}
-                                className="flex-1 h-12 text-lg font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70
-                                shadow-lg hover:shadow-xl
-                                transition-all duration-300 hover:scale-[1.02]"
+                                onClick={() => setPrompt('')}
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-3 right-3 text-muted-foreground/60"
                             >
-                                {isLoading ? (
-                                    <>
-                                        <Sparkles className="mr-2 h-5 w-5 animate-spin" />
-                                        Generating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="mr-2 h-5 w-5" />
-                                        Generate Query
-                                    </>
-                                )}
+                                <RotateCcw className="h-4 w-4" />
                             </Button>
-                            {queryHistory.length > 0 && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="group relative px-4"
-                                >
-                                    <History className="h-5 w-5 text-primary" />
-                                    <Badge className="ml-2 bg-primary/20 text-primary">
-                                        {queryHistory.length}
-                                    </Badge>
-                                </Button>
+                        )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-4">
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="flex-1 h-12 text-lg font-medium bg-primary hover:bg-primary/90
+                transition-all duration-200 rounded-xl"
+                        >
+                            {isLoading ? (
+                                <Sparkles className="mr-2 h-5 w-5 animate-spin" />
+                            ) : (
+                                <Sparkles className="mr-2 h-5 w-5" />
                             )}
-                        </div>
-                    </form>
+                            {isLoading ? 'Generating Query...' : 'Generate Query'}
+                        </Button>
 
-                    {/* Query Results Section */}
-                    {generatedQuery && (
-                        <div className="mt-8 space-y-6">
-                            <Tabs defaultValue="query" className="w-full">
-                                <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1">
-                                    <TabsTrigger
-                                        value="query"
-                                        className="data-[state=active]:bg-background"
-                                    >
-                                        <Code2 className="h-4 w-4 mr-2" />
-                                        SQL Query
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="results"
-                                        className="data-[state=active]:bg-background"
-                                    >
-                                        <Table className="h-4 w-4 mr-2" />
-                                        Results
-                                    </TabsTrigger>
-                                </TabsList>
-
-                                <TabsContent value="query" className="mt-4">
-                                    <div className="rounded-lg border border-border/40 overflow-hidden">
-                                        <div className="bg-muted/30 p-3 flex justify-between items-center border-b border-border/40">
-                                            <div className="flex items-center gap-2">
-                                                <Code2 className="h-4 w-4 text-primary" />
-                                                <span className="font-medium">Generated SQL</span>
-                                            </div>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={handleCopyQuery}
-                                                className="hover:bg-background/50"
-                                            >
-                                                {copySuccess ? (
-                                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                                ) : (
-                                                    <Copy className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        <pre className="p-4 overflow-x-auto bg-secondary/30">
-                                            <code className="text-sm font-spaceMono">{generatedQuery}</code>
-                                        </pre>
-                                    </div>
-                                </TabsContent>
-
-                                <TabsContent value="results" className="space-y-4">
-                                    <div className="flex justify-between items-center mb-4 ">
-                                        <div className="flex items-center gap-2">
-                                            <Table className="h-4 w-4 text-primary" />
-                                            <h3 className="font-semibold">Query Results</h3>
-                                            {tableResult.length > 0 && (
-                                                <Badge variant="secondary">
-                                                    {tableResult.length} {tableResult.length === 1 ? 'row' : 'rows'}
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        {tableResult.length > 0 && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={exportToCSV}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <Download className="h-4 w-4" />
-                                                Export CSV
-                                            </Button>
-                                        )}
-                                    </div>
-                                    <div className="rounded-lg border border-border/40 shadow-sm bg-muted/30 overflow-hidden">
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm ">
-                                                {tableResult.length > 0 ? (
-                                                    <>
-                                                        <thead className="bg-muted/90">
-                                                            <tr>
-                                                                {getColumnHeaders(tableResult).map((header) => (
-                                                                    <th
-                                                                        key={header}
-                                                                        className="px-6 py-4 text-left font-spaceMono text-base"
-                                                                    >
-                                                                        {formatColumnHeader(header)}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-border/40">
-                                                            {tableResult.map((row, rowIndex) => (
-                                                                <tr
-                                                                    key={rowIndex}
-                                                                    className="hover:bg-muted/30 transition-colors"
-                                                                >
-                                                                    {getColumnHeaders(tableResult).map((header) => (
-                                                                        <td
-                                                                            key={`${rowIndex}-${header}`}
-                                                                            className="px-6 py-4 whitespace-nowrap"
-                                                                        >
-                                                                            <div className="max-w-xs truncate">
-                                                                                {formatCellValue(row[header])}
-                                                                            </div>
-                                                                        </td>
-                                                                    ))}
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </>
-                                                ) : (
-                                                    <tbody>
-                                                        <tr>
-                                                            <td className="px-6 py-8 text-center text-muted-foreground">
-                                                                No results to display. Execute the query to see data.
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                )}
-                                            </table>
-                                        </div>
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-                        </div>
-                    )}
-
-                    {!generatedQuery && !isLoading && (
-                        <Alert className="bg-primary/5 border-primary/20">
-                            <AlertCircle className="h-5 w-5 text-primary" />
-                            <AlertDescription className="text-base">
-                                Be specific in your query description for better results. Include timeframes, conditions, and desired outputs.
-                            </AlertDescription>
-                        </Alert>
-                    )}
+                        <Button
+                            variant="outline"
+                            className="w-12 h-12 rounded-xl"
+                        >
+                            <History className="h-5 w-5 text-primary" />
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
+
+            {/* Results Section with Improved Layout */}
+            {generatedQuery && (
+                <div className="bg-card rounded-xl border border-primary/10 shadow-lg overflow-hidden">
+                    <Tabs defaultValue="query" className="w-full">
+                        <div className="px-6 pt-6">
+                            <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-xl p-1">
+                                <TabsTrigger value="query" className="rounded-lg">
+                                    <Code2 className="h-4 w-4 mr-2" />
+                                    SQL Query
+                                </TabsTrigger>
+                                <TabsTrigger value="results" className="rounded-lg">
+                                    <Table className="h-4 w-4 mr-2" />
+                                    Results
+                                </TabsTrigger>
+                            </TabsList>
+                        </div>
+
+                        <TabsContent value="query" className="p-6">
+                            <div className="rounded-xl border border-primary/10 overflow-hidden">
+                                <div className="bg-muted/30 px-4 py-3 flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <Code2 className="h-4 w-4 text-primary" />
+                                        <span className="font-medium">Generated SQL</span>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={handleCopyQuery}
+                                        className="hover:bg-primary/10"
+                                    >
+                                        {copySuccess ? (
+                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                        ) : (
+                                            <Copy className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                                <pre className="p-4 bg-muted/20">
+                                    <code className="text-sm font-mono">{generatedQuery}</code>
+                                </pre>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="results" className="p-6">
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <Table className="h-4 w-4 text-primary" />
+                                        <h3 className="font-medium">Query Results</h3>
+                                        <Badge variant="secondary" className="bg-primary/10">
+                                            {tableResult.length} rows
+                                        </Badge>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="rounded-lg"
+                                        onClick={exportToCSV}
+                                    >
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Export CSV
+                                    </Button>
+                                </div>
+
+                                <div className="rounded-xl border border-primary/10 overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm ">
+                                            {tableResult.length > 0 ? (
+                                                <>
+                                                    <thead className="bg-muted/90">
+                                                        <tr>
+                                                            {getColumnHeaders(tableResult).map((header) => (
+                                                                <th
+                                                                    key={header}
+                                                                    className="px-6 py-4 text-left font-spaceMono text-base"
+                                                                >
+                                                                    {formatColumnHeader(header)}
+                                                                </th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-border/40">
+                                                        {tableResult.map((row, rowIndex) => (
+                                                            <tr
+                                                                key={rowIndex}
+                                                                className="hover:bg-muted/30 transition-colors"
+                                                            >
+                                                                {getColumnHeaders(tableResult).map((header) => (
+                                                                    <td
+                                                                        key={`${rowIndex}-${header}`}
+                                                                        className="px-6 py-4 whitespace-nowrap"
+                                                                    >
+                                                                        <div className="max-w-xs truncate">
+                                                                            {formatCellValue(row[header])}
+                                                                        </div>
+                                                                    </td>
+                                                                ))}
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </>
+                                            ) : (
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="px-6 py-8 text-center text-muted-foreground">
+                                                            No results to display. Execute the query to see data.
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            )}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                </div>
+            )}
         </div>
     )
 }
