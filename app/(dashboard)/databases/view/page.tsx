@@ -1,133 +1,114 @@
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { DatabaseInfo } from '@/components/database/database-info'
-import { DatabasePrompt } from '@/components/database/database-prompt'
+import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { 
   LogOut, 
   Database, 
-  ChevronRight, 
   Settings,
   History,
   Code2,
   TableProperties
 } from 'lucide-react'
 import { getStoredCredentials } from '@/utils/sessionStore'
+import { DatabaseConnectionConfig } from '@/types/Database'
+
+// Lazy load components that aren't immediately visible
+const DatabaseInfo = lazy(() => import('@/components/database/database-info'))
+const DatabasePrompt = lazy(() => import('@/components/database/database-prompt'))
+
+// Separate Header component for better organization
+const DatabaseHeader = ({ credentials }:{credentials:DatabaseConnectionConfig | null}) => (
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+    <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+      <Database className="h-7 w-7 text-primary" />
+    </div>
+    <div>
+      <div className="flex flex-wrap items-center gap-3 mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold">{credentials?.type?.toUpperCase()} Database</h1>
+        <div className="px-3 py-1 bg-primary/10 rounded-full">
+          <span className="text-sm font-medium text-primary">Connected</span>
+        </div>
+      </div>
+      <p className="text-sm sm:text-base text-muted-foreground break-all">
+        {credentials?.method === 'parameters' 
+          ? `${credentials.parameters.host}:${credentials.parameters.port}/${credentials.parameters.database}`
+          : credentials?.connectionString
+        }
+      </p>
+    </div>
+  </div>
+)
+
+// Tab configuration for better maintainability
+const TABS_CONFIG = [
+  { id: 'query', label: 'Query Assistant', icon: Code2 },
+  { id: 'schema', label: 'Schema Explorer', icon: TableProperties },
+  { id: 'history', label: 'Query History', icon: History },
+  { id: 'settings', label: 'Connection Settings', icon: Settings }
+]
 
 export default async function DatabasePage() {
-  const dbCredientials = await getStoredCredentials();
+  const dbCredentials = await getStoredCredentials()
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/98 to-background/95">
-      <div className="max-w-8xl mx-auto px-5 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-3">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Database className="h-7 w-7 text-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold">{dbCredientials?.type.toUpperCase()} Database</h1>
-                <div className="px-3 py-1 bg-primary/10 rounded-full">
-                  <span className="text-sm font-medium text-primary">Connected</span>
-                </div>
-              </div>
-              <p className="text-muted-foreground">
-                {dbCredientials?.method === 'parameters' ? (
-                  <>
-                    {dbCredientials.parameters.host}:{dbCredientials.parameters.port}/{dbCredientials.parameters.database}
-                  </>
-                ) : (
-                  <>
-                    {dbCredientials?.connectionString}
-                  </>
-                ) 
-                }
-              </p>
-            </div>
-          </div>
+          <DatabaseHeader credentials={dbCredentials} />
 
-          {/* Main Tabs Interface */}
           <Tabs defaultValue="query" className="space-y-5">
-            <TabsList className="bg-background border-b border-border/40 w-full justify-start h-12 rounded-none gap-10">
-              <TabsTrigger 
-                value="query" 
-                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
-              >
-                <Code2 className="mr-2 h-4 w-4" />
-                Query Assistant
-              </TabsTrigger>
-              <TabsTrigger 
-                value="schema" 
-                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
-              >
-                <TableProperties className="mr-2 h-4 w-4" />
-                Schema Explorer
-              </TabsTrigger>
-              <TabsTrigger 
-                value="history" 
-                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
-              >
-                <History className="mr-2 h-4 w-4" />
-                Query History
-              </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Connection Settings
-              </TabsTrigger>
-            </TabsList>
+            {/* Responsive Tabs */}
+            <div className="overflow-x-auto">
+              <TabsList className="bg-background border-b border-border/40 w-full justify-start h-12 rounded-none gap-4 sm:gap-10 min-w-max">
+                {TABS_CONFIG.map(({ id, label, icon: Icon }) => (
+                  <TabsTrigger 
+                    key={id}
+                    value={id} 
+                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent border-b-2 border-transparent px-0 rounded-none whitespace-nowrap"
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">{label}</span>
+                    <span className="sm:hidden">{label.split(' ')[0]}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
             {/* Query Assistant Tab */}
-            <TabsContent value="query" className="space-y-6 mt-6">
-              <div className="grid grid-cols-12 gap-6">
-                {/* Left Sidebar - Database Info */}
-                <div className="col-span-3">
+            <TabsContent value="query" className="mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-3">
                   <Suspense fallback={<DatabaseInfoSkeleton />}>
                     <DatabaseInfo />
                   </Suspense>
                 </div>
-                
-                {/* Main Content - Query Interface */}
-                <div className="col-span-9">
-                  <DatabasePrompt />
+                <div className="lg:col-span-9">
+                  <Suspense fallback={<QueryInterfaceSkeleton />}>
+                    <DatabasePrompt />
+                  </Suspense>
                 </div>
               </div>
             </TabsContent>
 
-            {/* Schema Explorer Tab */}
-            <TabsContent value="schema">
-              <Card className="border-primary/20">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium mb-4">Database Schema</h3>
-                  {/* Add Schema Explorer Component Here */}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Query History Tab */}
-            <TabsContent value="history">
-              <Card className="border-primary/20">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium mb-4">Recent Queries</h3>
-                  {/* Add Query History Component Here */}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Connection Settings Tab */}
-            <TabsContent value="settings">
-              <Card className="border-primary/20">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium mb-4">Database Connection Settings</h3>
-                  {/* Add Connection Settings Component Here */}
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/* Other Tabs */}
+            {[
+              { value: 'schema', Component: <></>, title: 'Database Schema' },
+              { value: 'history', Component: <></>, title: 'Recent Queries' },
+              { value: 'settings', Component: <></>, title: 'Database Connection Settings' }
+            ].map(({ value, Component, title }) => (
+              <TabsContent key={value} value={value}>
+                <Card className="border-primary/20">
+                  <CardContent className="p-4 sm:p-6">
+                    <h3 className="text-lg font-medium mb-4">{title}</h3>
+                    <Suspense fallback={<ContentSkeleton />}>
+                      <></>
+                    </Suspense>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            ))}
           </Tabs>
         </div>
       </div>
@@ -135,17 +116,37 @@ export default async function DatabasePage() {
   )
 }
 
+// Skeleton components
 function DatabaseInfoSkeleton() {
   return (
     <Card className="border-primary/20">
       <CardContent className="p-4 space-y-4">
         <Skeleton className="h-6 w-24" />
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function QueryInterfaceSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-48 w-full" />
+    </div>
+  )
+}
+
+function ContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full" />
+      ))}
+    </div>
   )
 }

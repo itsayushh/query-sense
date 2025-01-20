@@ -30,7 +30,7 @@ async function getDatabaseTables(){
     }
 }
 
-export async function DatabaseInfo() {
+export default async function DatabaseInfo() {
   const result = await getDatabaseTables()
   const tables = result.tables || []
 
@@ -54,7 +54,7 @@ export async function DatabaseInfo() {
         </div>
       </CardHeader>
 
-          <ScrollArea className=" bg-background backdrop-blur-sm h-full w-full">
+          <ScrollArea className=" bg-background backdrop-blur-sm w-full h-80">
             <div className="divide-y divide-border/40">
               {tables.length > 0 ? (
                 tables.map((table: string) => (

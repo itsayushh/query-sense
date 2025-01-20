@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
-export function DatabasePrompt() {
+export default function DatabasePrompt() {
     const [prompt, setPrompt] = useState('')
     const [generatedQuery, setGeneratedQuery] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -112,7 +112,7 @@ export function DatabasePrompt() {
     }
 
     return (
-        <div className="space-y-5">
+        <div className="space-y-8">
             {/* Hero Section with Improved Visual Hierarchy */}
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-transparent p-5">
                 <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
@@ -123,8 +123,9 @@ export function DatabasePrompt() {
                     <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
                         <Bot className="h-7 w-7 text-primary" />
                     </div>
+
                     <div className="flex-1 space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tight">AI Query Assistant</h1>
+                        <h1 className="text-4xl font-bold tracking-tight">AI Query Assistant</h1>
                         <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
                             Transform your questions into powerful SQL queries using natural language.
                         </p>
@@ -134,7 +135,7 @@ export function DatabasePrompt() {
 
             {/* Main Query Interface */}
             <Card className="border-primary/10 shadow-lg">
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-6 space-y-8">
                     {/* Query Input */}
                     <div className="relative">
                         <Textarea
