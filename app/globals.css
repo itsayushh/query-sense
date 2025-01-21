@@ -4,64 +4,62 @@
 
 @layer base {
   :root {
-    /* Core Brand Colors - Refined blue palette for enterprise feel */
-    --primary: 215 85% 45%;      /* Deeper, more authoritative blue */
+    /* Core Brand Colors - Professional B2B Palette */
+    --primary: 222 83% 45%;      /* Strong, trustworthy blue */
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary Colors - Sophisticated neutrals */
-    --secondary: 215 15% 70%;
-    --secondary-foreground: 215 15% 20%;
+    /* Secondary Colors - Refined Business Neutrals */
+    --secondary: 222 15% 50%;    /* Professional, balanced neutral */
+    --secondary-foreground: 222 25% 15%;
     
-    /* Background Hierarchy */
-    --background: 210 30% 99%;    /* Cleaner white background */
-    --foreground: 215 25% 15%;    /* Sharper text contrast */
-    --card: 210 25% 97%;
-    --card-foreground: 215 25% 15%;
-    --popover: 210 30% 99%;
-    --popover-foreground: 215 25% 15%;
+    /* Background Hierarchy - Clean Enterprise Look */
+    --background: 0 0% 100%;     /* Pure white for maximum clarity */
+    --foreground: 222 35% 12%;   /* Rich, readable text */
+    --card: 220 25% 98%;         /* Subtle depth for cards */
+    --card-foreground: 222 35% 12%;
+    --popover: 0 0% 100%;        /* Clean popover background */
+    --popover-foreground: 222 35% 12%;
     
-    /* Accent & Feedback Colors */
-    --accent: 200 65% 45%;       /* Complementary teal for highlights */
-    --accent-foreground: 215 25% 15%;
-    --destructive: 355 75% 45%;  /* More refined red */
+    /* Accent & Feedback Colors - Enterprise Palette */
+    --accent: 200 65% 42%;       /* Professional teal accent */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 358 75% 45%;  /* Clear, purposeful red */
     --destructive-foreground: 0 0% 100%;
     
-    /* UI Elements */
-    --muted: 215 15% 95%;
-    --muted-foreground: 215 25% 35%;
-    --border: 215 20% 85%;
-    --input: 215 20% 85%;
-    --ring: 215 85% 45%;
+    /* UI Elements - Enterprise Polish */
+    --muted: 220 20% 94%;        /* Subtle, professional gray */
+    --muted-foreground: 220 15% 40%;
+    --border: 220 20% 85%;       /* Professional border contrast */
+    --input: 220 20% 92%;        /* Clear input distinction */
+    --ring: 222 83% 45%;         /* Matched to primary */
     
     /* System */
-    --radius: 0.625rem;          /* Slightly reduced radius for professionalism */
+    --radius: 0.375rem;          /* Professional rounding */
   }
 
   .dark {
-    /* Dark Mode Optimization */
-    --background: 215 25% 8%;    /* Deeper background for less eye strain */
-    --foreground: 215 15% 95%;
-    --card: 215 25% 12%;
-    --card-foreground: 215 15% 95%;
-    --popover: 215 25% 6%;
-    --popover-foreground: 215 15% 95%;
+    /* Dark Mode - Keeping existing theme */
+    --background: 220 25% 10%;
+    --foreground: 220 15% 95%;
+    --card: 220 25% 15%;
+    --card-foreground: 220 15% 95%;
+    --popover: 220 25% 12%;
+    --popover-foreground: 220 15% 95%;
     
-    /* Adjusted for dark mode visibility */
-    --primary: 215 85% 55%;      /* Brighter primary for dark mode */
+    --primary: 220 70% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 15% 30%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 220 15% 35%;
+    --secondary-foreground: 220 15% 95%;
     
-    /* Dark mode specific adjustments */
-    --muted: 215 15% 20%;
-    --muted-foreground: 215 15% 65%;
-    --accent: 200 65% 50%;
-    --accent-foreground: 215 15% 95%;
-    --destructive: 355 75% 50%;
+    --muted: 220 15% 25%;
+    --muted-foreground: 220 15% 70%;
+    --accent: 190 60% 50%;
+    --accent-foreground: 220 15% 95%;
+    --destructive: 350 60% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 215 15% 25%;
-    --input: 215 15% 25%;
-    --ring: 215 85% 55%;
+    --border: 220 15% 30%;
+    --input: 220 15% 30%;
+    --ring: 220 70% 60%;
   }
 }
 
