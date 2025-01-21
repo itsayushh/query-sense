@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Cable, DatabaseIcon, DatabaseZapIcon, Eye, EyeOff, Icon, Link2Icon, ServerIcon, UserIcon } from 'lucide-react'
+import { Cable, DatabaseIcon, DatabaseZapIcon, Eye, EyeClosed, EyeOff, Icon, Link2Icon, ServerIcon, UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -170,7 +170,7 @@ export function DatabaseConnectionForm() {
     }
 
     return (
-        <Card className="w-[70%] hover-card flex flex-row items-center justify-between p-5 glass">
+        <Card className="w-[80%] hover-card flex flex-row items-center justify-between p-5 glass ">
             <CardHeader className="space-y-8 text-center py-10 bg-background">
                     <div className="relative mx-auto w-24 h-24">
                         <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
@@ -181,7 +181,7 @@ export function DatabaseConnectionForm() {
                         <CardTitle className="text-3xl font-semibold tracking-tight">
                             Connect Database
                         </CardTitle>
-                        <p className="mt-2 text-sm text-muted-foreground">
+                        <p className="mt-2 text-xl text-muted-foreground">
                             Configure your database connection settings
                         </p>
                     </div>
@@ -313,6 +313,7 @@ function ParametersForm({
                         error={errors.host}
                         placeholder="localhost"
                         icon={ServerIcon}
+                        className='text-5xl'
                     />
                     <DatabaseFormInput
                         label="Port"
@@ -333,25 +334,22 @@ function ParametersForm({
                         icon={UserIcon}
                     />
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">
+                        <label className="flex items-center gap-2 text-base font-medium mb-2">
                             Password
                         </label>
-                        <div className="relative">
-                            <KeyIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-foreground h-4 w-4" />
+                        <div className="relative group">
+                            <KeyIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors duration-200 group-focus-within:text-primary h-5 w-5" />
                             <Input
                                 type={showPassword ? "text" : "password"}
                                 value={formData.parameters.password}
+                                style={{ fontSize: '1.08rem' }} // Additional backup using inline style
                                 onChange={(e) => onParameterChange('password', e.target.value)}
                                 className={`
-                                                            h-10 pl-9 pr-10
+                                                          h-12 bg-background/50 backdrop-blur-sm
+                                                          border border-input/50 hover:border-input
+                                                          focus:border-primary focus:ring-1 focus:ring-primary
+                                                          transition-all duration-200 pl-11
                                                             ${errors.password ? 'border-red-500' : 'border-border/50'}
-                                                            bg-background/30
-                                                            backdrop-blur-sm
-                                                            shadow-sm
-                                                            hover:bg-background/40
-                                                            focus:bg-background/50
-                                                            transition-all
-                                                            duration-200
                                                         `}
                             />
                             <Button
@@ -362,7 +360,7 @@ function ParametersForm({
                                 onClick={onTogglePassword}
                             >
                                 {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-muted-foreground/60" />
+                                    <EyeClosed className="h-4 w-4 text-muted-foreground/60" />
                                 ) : (
                                     <Eye className="h-4 w-4 text-muted-foreground/60" />
                                 )}
@@ -398,7 +396,7 @@ function URLForm({
     onChange: (value: string) => void
 }) {
     return (
-        <TabsContent value="url" className="space-y-6">
+        <TabsContent value="url" className="space-y-6 w-[30vw]">
             
             <DatabaseFormInput
                 label="Connection String"
