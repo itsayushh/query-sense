@@ -31,11 +31,7 @@ export async function POST(request: Request) {
     const queryGenerator = new QueryGenerator(process.env.GEMINI_API_KEY!)
     let sqlQuery = await queryGenerator.generateQuery(config, schemas, prompt)
     let result = await dbConnection.executeQuery(connection, sqlQuery)
-    // If first attempt fails, try with refined context
     if (!result.success) {
-      // console.log('First attempt failed:', result.error)
-      
-      // Generate refined query using the error message
       const refinedQuery = await queryGenerator.generateQuery(
         config,
         schemas,

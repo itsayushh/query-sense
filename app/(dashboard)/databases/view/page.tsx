@@ -1,45 +1,21 @@
 import { Suspense, lazy } from 'react'
-import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { 
-  LogOut, 
-  Database, 
   Settings,
   History,
   Code2,
   TableProperties
 } from 'lucide-react'
 import { getStoredCredentials } from '@/utils/sessionStore'
-import { DatabaseConnectionConfig } from '@/types/Database'
+import { DatabaseHeader } from '@/components/database/database-header'
 
 // Lazy load components that aren't immediately visible
 const DatabaseInfo = lazy(() => import('@/components/database/database-info'))
 const DatabasePrompt = lazy(() => import('@/components/database/database-prompt'))
 
-// Separate Header component for better organization
-const DatabaseHeader = ({ credentials }:{credentials:DatabaseConnectionConfig | null}) => (
-  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
-    <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-      <Database className="h-7 w-7 text-primary" />
-    </div>
-    <div>
-      <div className="flex flex-wrap items-center gap-3 mb-2">
-        <h1 className="text-xl sm:text-2xl font-bold">{credentials?.type?.toUpperCase()} Database</h1>
-        <div className="px-3 py-1 bg-primary/10 rounded-full">
-          <span className="text-sm font-medium text-primary">Connected</span>
-        </div>
-      </div>
-      <p className="text-sm sm:text-base text-muted-foreground break-all">
-        {credentials?.method === 'parameters' 
-          ? `${credentials.parameters.host}:${credentials.parameters.port}/${credentials.parameters.database}`
-          : credentials?.connectionString
-        }
-      </p>
-    </div>
-  </div>
-)
+
 
 // Tab configuration for better maintainability
 const TABS_CONFIG = [
@@ -56,7 +32,7 @@ export default async function DatabasePage() {
     <div className="min-h-screen bg-gradient-to-b from-background via-background/98 to-background/95">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-3">
-          <DatabaseHeader credentials={dbCredentials} />
+          <DatabaseHeader />
 
           <Tabs defaultValue="query" className="space-y-5">
             {/* Responsive Tabs */}

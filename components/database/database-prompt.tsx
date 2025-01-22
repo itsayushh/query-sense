@@ -3,11 +3,11 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { AlertCircle, Code2, Copy, PlayCircle, RotateCcw, Sparkles, Table, History, CheckCircle2, Download, Bot } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent} from '@/components/ui/card'
+import { Code2, Copy, RotateCcw, Sparkles, Table, History, CheckCircle2, Download, Bot } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function DatabasePrompt() {
     const [prompt, setPrompt] = useState('')
@@ -15,7 +15,6 @@ export default function DatabasePrompt() {
     const [isLoading, setIsLoading] = useState(false)
     const [queryHistory, setQueryHistory] = useState<string[]>([])
     const [tableResult, setTableResult] = useState([])
-    const [activeTab, setActiveTab] = useState('query')
     const [copySuccess, setCopySuccess] = useState(false)
 
     const getColumnHeaders = (data: any[]) => {
@@ -141,8 +140,9 @@ export default function DatabasePrompt() {
                         <Textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
+                            style={{ fontSize: '1.1rem' }}
                             placeholder="What insights would you like to discover? Try: 'Show me the top 10 customers by revenue in the last quarter'"
-                            className="min-h-[120px] text-lg leading-relaxed p-6 rounded-xl
+                            className="min-h-[120px] text-2xl leading-relaxed p-5 rounded-md
                 bg-muted/30 border-primary/10 focus:border-primary/20
                 shadow-sm transition-all duration-200"
                         />
@@ -204,7 +204,7 @@ export default function DatabasePrompt() {
 
                         <TabsContent value="query" className="p-6">
                             <div className="rounded-xl border border-primary/10 overflow-hidden">
-                                <div className="bg-muted/30 px-4 py-3 flex justify-between items-center">
+                                <div className="bg-muted px-4 py-3 flex justify-between items-center">
                                     <div className="flex items-center gap-2">
                                         <Code2 className="h-4 w-4 text-primary" />
                                         <span className="font-medium">Generated SQL</span>
@@ -222,8 +222,8 @@ export default function DatabasePrompt() {
                                         )}
                                     </Button>
                                 </div>
-                                <pre className="p-4 bg-muted/20">
-                                    <code className="text-sm font-mono">{generatedQuery}</code>
+                                <pre className="p-4 bg-background/60">
+                                    <code className="text-lg font-mono">{generatedQuery}</code>
                                 </pre>
                             </div>
                         </TabsContent>
@@ -250,53 +250,55 @@ export default function DatabasePrompt() {
                                 </div>
 
                                 <div className="rounded-xl border border-primary/10 overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm ">
-                                            {tableResult.length > 0 ? (
-                                                <>
-                                                    <thead className="bg-muted/90">
-                                                        <tr>
-                                                            {getColumnHeaders(tableResult).map((header) => (
-                                                                <th
-                                                                    key={header}
-                                                                    className="px-6 py-4 text-left font-spaceMono text-base"
-                                                                >
-                                                                    {formatColumnHeader(header)}
-                                                                </th>
-                                                            ))}
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-border/40">
-                                                        {tableResult.map((row, rowIndex) => (
-                                                            <tr
-                                                                key={rowIndex}
-                                                                className="hover:bg-muted/30 transition-colors"
-                                                            >
+                                    <ScrollArea className="w-full h-[500px]">
+                                        <div className="w-full">
+                                            <table className="w-full text-sm">
+                                                {tableResult.length > 0 ? (
+                                                    <>
+                                                        <thead className="bg-muted sticky top-0 z-10">
+                                                            <tr>
                                                                 {getColumnHeaders(tableResult).map((header) => (
-                                                                    <td
-                                                                        key={`${rowIndex}-${header}`}
-                                                                        className="px-6 py-4 whitespace-nowrap"
+                                                                    <th
+                                                                        key={header}
+                                                                        className="px-6 py-4 text-left font-spaceMono text-base sticky top-0 bg-muted"
                                                                     >
-                                                                        <div className="max-w-xs truncate">
-                                                                            {formatCellValue(row[header])}
-                                                                        </div>
-                                                                    </td>
+                                                                        {formatColumnHeader(header)}
+                                                                    </th>
                                                                 ))}
                                                             </tr>
-                                                        ))}
+                                                        </thead>
+                                                        <tbody className="divide-y divide-border/40 bg-background/60">
+                                                            {tableResult.map((row, rowIndex) => (
+                                                                <tr
+                                                                    key={rowIndex}
+                                                                    className="hover:bg-muted/30 transition-colors"
+                                                                >
+                                                                    {getColumnHeaders(tableResult).map((header) => (
+                                                                        <td
+                                                                            key={`${rowIndex}-${header}`}
+                                                                            className="px-6 py-4 whitespace-nowrap"
+                                                                        >
+                                                                            <div className="max-w-xs truncate">
+                                                                                {formatCellValue(row[header])}
+                                                                            </div>
+                                                                        </td>
+                                                                    ))}
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </>
+                                                ) : (
+                                                    <tbody>
+                                                        <tr>
+                                                            <td className="px-6 py-8 text-center text-muted-foreground">
+                                                                No results to display. Execute the query to see data.
+                                                            </td>
+                                                        </tr>
                                                     </tbody>
-                                                </>
-                                            ) : (
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="px-6 py-8 text-center text-muted-foreground">
-                                                            No results to display. Execute the query to see data.
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            )}
-                                        </table>
-                                    </div>
+                                                )}
+                                            </table>
+                                        </div>
+                                    </ScrollArea>
                                 </div>
                             </div>
                         </TabsContent>
