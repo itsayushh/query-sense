@@ -23,6 +23,11 @@ export class MySQLConnection extends DatabaseConnection {
     await connection.end()
   }
 
+  async getDatabase(connection:mysql.Connection):Promise<string[]> {
+    const [rows] = await connection.query('SHOW DATABASES');
+    return (rows as any[]).map(row => row.Database as string)
+  }
+
   async getTables(connection: mysql.Connection): Promise<string[]> {
     const [rows] = await connection.query('SHOW TABLES')
     return (rows as any[]).map(row => Object.values(row)[0] as string)

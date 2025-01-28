@@ -13,7 +13,13 @@ export class MongoDBConnection extends DatabaseConnection {
 
   async disconnect(connection: MongoClient) {
     await connection.close()
-}
+  }
+
+  async getDatabase(connection: MongoClient): Promise<string[]> {
+    const databases = await connection.db().admin().listDatabases()
+    return databases.databases.map((db: any) => db.name)
+  }
+
 
   async getTables(connection: MongoClient): Promise<string[]> {
     const collections = await connection.db().listCollections().toArray()

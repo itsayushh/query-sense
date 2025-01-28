@@ -6,4 +6,7 @@ export abstract class DatabaseConnection {
     abstract getTables(connection: any): Promise<string[]>
     abstract getTableSchema(connection: any, tables: string[]): Promise<TableSchema[]>
     abstract executeQuery(connection: any, query: string): Promise<any>
+    getDatabase(connection: any): Promise<string[]> {
+      return Promise.resolve([]);
+    }
   }

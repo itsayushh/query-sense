@@ -22,6 +22,11 @@ export class PostgresConnection extends DatabaseConnection {
     await connection.end()
   }
 
+  async getDatabase(connection: Client): Promise<string[]> {
+    const result = await connection.query('SELECT datname FROM pg_database WHERE datistemplate = false')
+    return result.rows.map(row => row.datname)
+  }
+
   async getTables(connection: Client): Promise<string[]> {
     const result = await connection.query(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
