@@ -1,6 +1,6 @@
 'use client'
 
-import { BrickWall, ChevronLeft, ChevronRight } from 'lucide-react'
+import {  ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React from 'react'
@@ -56,7 +56,7 @@ function Navbar() {
       <div className="flex items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <BrickWall className='h-8 w-8 text-primary' />
+          {/* <BrickWall className='h-8 w-8 text-primary' /> */}
           { pathname === '/' && <h1 className="text-xl font-bold">QuerySense</h1>}
         </Link>
 

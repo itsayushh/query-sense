@@ -1,4 +1,4 @@
-import { DatabaseType, DatabaseConnectionConfig } from '@/types/Database'
+import { DatabaseType } from '@/types/Database'
 import { PostgresConnection } from './connection/postgresql'
 import { MySQLConnection } from './connection/mysql'
 import { MongoDBConnection } from './connection/mongodb'

@@ -2,19 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Cable, DatabaseIcon, DatabaseZapIcon, Eye, EyeClosed, EyeOff, Icon, Link2Icon, ServerIcon, UserIcon } from 'lucide-react'
+import { Cable, DatabaseIcon, DatabaseZapIcon, Eye, EyeClosed, Link2Icon, ServerIcon, UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
 import { LoadingSpinner } from '../icons'
-import type { DatabaseConnectionConfig, DatabaseType, ConnectionMethod, ConnectionParameters, ParametersConnectionConfig, UrlConnectionConfig } from '@/types/Database'
+import type { DatabaseConnectionConfig, DatabaseType, ConnectionMethod, ConnectionParameters } from '@/types/Database'
 import { DATABASE_CONFIG } from '@/utils/constants'
 import { DatabaseFormInput } from './database-form'
-import { connection } from 'next/server'
-import { set } from 'react-hook-form'
 import { KeyIcon } from 'lucide-react'
 
 const DEFAULT_VALUES: DatabaseConnectionConfig = {
@@ -29,36 +27,7 @@ const DEFAULT_VALUES: DatabaseConnectionConfig = {
     }
 }
 
-const FormInput = ({
-    label,
-    error,
-    icon: Icon,
-    ...props
-}: {
-    label: string
-    error?: string
-    icon?: React.ComponentType<any>
-} & React.InputHTMLAttributes<HTMLInputElement>) => (
-    <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {label}
-        </label>
-        <div className="relative">
-            {Icon && (
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                    <Icon className="h-4 w-4" />
-                </div>
-            )}
-            <Input
-                {...props}
-                className={`${error ? 'border-red-500' : ''} ${Icon ? 'pl-9' : ''} bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors duration-200`}
-            />
-        </div>
-        {error && (
-            <p className="text-sm text-red-500">{error}</p>
-        )}
-    </div>
-)
+
 
 export function DatabaseConnectionForm() {
     const router = useRouter()

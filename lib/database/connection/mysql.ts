@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise'
 import { DatabaseConnectionConfig, TableSchema } from '@/types/Database'
 import { DatabaseConnection } from './base'
-import { Result } from 'postcss'
 
 export class MySQLConnection extends DatabaseConnection {
   async connect(config: DatabaseConnectionConfig) {

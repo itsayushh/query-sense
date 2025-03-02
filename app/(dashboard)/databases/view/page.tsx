@@ -1,29 +1,12 @@
 import { Suspense, lazy } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import {
-  Settings,
-  History,
-  Code2,
-  TableProperties
-} from 'lucide-react'
-import { getStoredCredentials } from '@/utils/sessionStore'
 import { DatabaseHeader } from '@/components/database/database-header'
 
 // Lazy load components that aren't immediately visible
 const DatabaseInfo = lazy(() => import('@/components/database/database-info'))
 const DatabasePrompt = lazy(() => import('@/components/database/database-prompt'))
 
-
-
-// Tab configuration for better maintainability
-const TABS_CONFIG = [
-  { id: 'query', label: 'Query Assistant', icon: Code2 },
-  { id: 'schema', label: 'Schema Explorer', icon: TableProperties },
-  { id: 'history', label: 'Query History', icon: History },
-  { id: 'settings', label: 'Connection Settings', icon: Settings }
-]
 
 export default async function DatabasePage() {
 
@@ -75,12 +58,12 @@ function QueryInterfaceSkeleton() {
   )
 }
 
-function ContentSkeleton() {
-  return (
-    <div className="space-y-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full" />
-      ))}
-    </div>
-  )
-}
+// function _ContentSkeleton() {
+//   return (
+//     <div className="space-y-4">
+//       {Array.from({ length: 4 }).map((_, i) => (
+//         <Skeleton key={i} className="h-12 w-full" />
+//       ))}
+//     </div>
+//   )
+// }

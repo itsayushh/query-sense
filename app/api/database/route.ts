@@ -1,7 +1,6 @@
 import { DatabaseFactory } from "@/lib/database/factory";
 import { DatabaseManager } from "@/lib/database/manager";
 import { DatabaseConnectionConfig } from "@/types/Database";
-import { getStoredCredentials } from "@/utils/sessionStore";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

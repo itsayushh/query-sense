@@ -4,57 +4,14 @@ import { Button } from '@/components/ui/button';
 import {
   DatabaseIcon,
   ArrowRight,
-  Sparkles,
-  Shield,
   Zap,
   Code,
-  Database,
-  Cpu,
   ChevronRight,
   Play,
-  CheckCircle2
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
-  const features = [
-    {
-      title: "Natural Language to SQL",
-      description: "Transform plain English questions into precise SQL queries using advanced AI. Save hours of manual query writing and reduce errors.",
-      icon: <Sparkles className="w-8 h-8 text-primary" />,
-      benefits: ["Reduce query writing time by 80%", "Natural language processing", "Auto-query optimization"]
-    },
-    {
-      title: "Enterprise-Grade Security",
-      description: "Bank-level encryption and security protocols protect your sensitive data. SOC 2 Type II certified with role-based access control.",
-      icon: <Shield className="w-8 h-8 text-primary" />,
-      benefits: ["End-to-end encryption", "Role-based access", "Audit logging"]
-    },
-    {
-      title: "Lightning Fast Performance",
-      description: "Optimized query generation with sub-second response times. Built for scale with distributed processing capabilities.",
-      icon: <Zap className="w-8 h-8 text-primary" />,
-      benefits: ["Sub-second responses", "Query caching", "Load balancing"]
-    },
-  ];
-  const integrations = [
-    {
-      icon: <Database className="w-6 h-6 text-primary" />,
-      name: "Multiple Databases",
-      description: "PostgreSQL, MySQL, SQLite, and more"
-    },
-    {
-      icon: <Code className="w-6 h-6 text-primary" />,
-      name: "AI-Powered",
-      description: "Advanced natural language processing"
-    },
-    {
-      icon: <Cpu className="w-6 h-6 text-primary" />,
-      name: "High Performance",
-      description: "Optimized query generation"
-    }
-  ];
 
   const stats = [
     {
@@ -81,9 +38,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
-      {/* Hero Section */}
       <div className="relative overflow-hidden">
-        {/* Background Pattern */}
         <div className="absolute inset-0 bg-grid-primary/[0.02] bg-[size:20px_20px]" />
 
         <div className="container mx-auto px-4 pt-20 pb-16 relative">

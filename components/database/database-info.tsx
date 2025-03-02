@@ -9,7 +9,7 @@ import { TableSchema } from "@/types/Database"
 async function getDatabaseTables() {
   try {
     const dbCredentials = await getStoredCredentials();
-    const response = await fetch('http://localhost:3000/api/database/table', {
+    const response = await fetch(`${process.env.PUBLIC_URL}/api/database/table`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dbCredentials),

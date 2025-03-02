@@ -1,5 +1,5 @@
 // src/lib/database/manager.ts
-import { DatabaseConnectionConfig, ConnectionResult, TableSchema, DatabaseType } from '@/types/Database'
+import { DatabaseConnectionConfig, TableSchema, DatabaseType } from '@/types/Database'
 import { DatabaseFactory } from './factory'
 
 
