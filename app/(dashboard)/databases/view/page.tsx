@@ -26,7 +26,6 @@ const TABS_CONFIG = [
 ]
 
 export default async function DatabasePage() {
-  const dbCredentials = await getStoredCredentials()
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/98 to-background/95">

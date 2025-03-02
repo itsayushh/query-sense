@@ -73,30 +73,46 @@ export default function DatabasePrompt() {
             return
         }
 
-        setIsLoading(true)
         try {
-            const response = await fetch('/api/execute-query', {
+            setIsLoading(true)
+            
+            // First, generate the query
+            const generateResponse = await fetch('/api/query/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt }),
             })
 
-            const data = await response.json()
-            if (data.success) {
-                setGeneratedQuery(data.query.replace('```sql', '').replace('```', ''))
+            const generateData = await generateResponse.json()
+            if (!generateData.success) {
+                throw new Error(generateData.message)
+            }
+
+            const generatedQuery = generateData.query.replace('```sql', '').replace('```', '')
+            setGeneratedQuery(generatedQuery)
+
+            // Then, execute the generated query
+            const executeResponse = await fetch('/api/query/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: generatedQuery }),
+            })
+
+            const executeData = await executeResponse.json()
+            if (executeData.success) {
                 setQueryHistory(prev => [...prev, prompt])
-                setTableResult(data.data)
+                setTableResult(executeData.data)
                 toast({
                     title: 'Success',
                     description: 'Query generated and executed successfully.',
                 })
             } else {
-                throw new Error(data.message)
+                throw new Error(executeData.message)
             }
         } catch (error) {
             toast({
                 title: 'Error',
-                description: error instanceof Error ? error.message : 'Failed to generate query',
+                description: error instanceof Error ? error.message : 'Failed to generate or execute query',
                 variant: 'destructive',
             })
         } finally {
