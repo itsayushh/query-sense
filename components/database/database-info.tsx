@@ -1,80 +1,144 @@
-import { DatabaseIcon, ServerIcon, TableIcon, ExternalLinkIcon } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { DatabaseIcon, TableIcon, KeyIcon } from "lucide-react"
+import { Card, CardHeader, CardTitle } from "../ui/card"
 import { Badge } from "../ui/badge"
 import { ScrollArea } from "../ui/scroll-area"
-import { Button } from "../ui/button"
 import { getStoredCredentials } from "@/utils/sessionStore"
+import { cn } from "@/lib/utils"
+import { TableSchema } from "@/types/Database"
 
-async function getDatabaseTables(){
-    try {
-        const dbCredientials = await getStoredCredentials();
-        const response = await fetch('http://localhost:3000/api/database/table', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dbCredientials),
-        })
+async function getDatabaseTables() {
+  try {
+    const dbCredentials = await getStoredCredentials();
+    const response = await fetch('http://localhost:3000/api/database/table', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dbCredentials),
+    })
 
-        if (!response.ok) {
-            const error = await response.json()
-            throw new Error(error.message || 'Connection failed')
-        }
-
-        const result = await response.json() 
-        return result
-    } catch (error) {
-        return JSON.stringify({
-            success:false,
-            message: error || 'Connection failed',
-            tables: []
-        })
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Connection failed')
     }
+
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      message: error || 'Connection failed',
+      schemas: []
+    }
+  }
 }
 
 export default async function DatabaseInfo() {
   const result = await getDatabaseTables()
-  const tables = result.tables || []
+  const schemas:TableSchema[] = result.schemas || []
 
   return (
-    <Card className="relative overflow-hidden border-primary/20 shadow-lg transition-all duration-300">
-      <CardHeader className="border-b border-border/40 bg-background">
+    <Card className="enterprise-card overflow-hidden">
+      <CardHeader className="py-3 px-4 bg-card border-b border-border/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-full " />
-              <DatabaseIcon className="h-6 w-6 text-primary relative" />
-            </div>
-            <CardTitle className="text-xl font-semibold">Available Tables</CardTitle>
+          <div className="flex items-center gap-2.5">
+            <DatabaseIcon className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg font-outfit">Database Schema</CardTitle>
           </div>
           <Badge 
-            variant="secondary" 
-            className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            variant="outline" 
+            className="text-xs font-normal bg-background text-secondary-foreground font-geist"
           >
-            {tables.length}
+            {schemas.length} Tables
           </Badge>
         </div>
       </CardHeader>
 
-          <ScrollArea className=" bg-background backdrop-blur-sm w-full h-80">
-            <div className="divide-y divide-border/40">
-              {tables.length > 0 ? (
-                tables.map((table: string) => (
-                  <div
-                    key={table}
-                    className="p-5 hover:bg-primary/5 transition-colors cursor-pointer flex items-center gap-2 group"
-                  >
-                    <TableIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <code className="text-sm font-mono group-hover:text-primary transition-colors">
-                      {table}
-                    </code>
+      <ScrollArea className="h-[calc(100vh-220px)] custom-scrollbar">
+        {schemas.length > 0 ? (
+          <div className="divide-y divide-border/40">
+            {schemas.map((table) => (
+              <div key={table.tableName} className="group">
+                <div className="p-3 flex items-center justify-between hover:bg-muted/30 cursor-pointer transition-colors duration-200">
+                  <div className="flex items-center gap-2.5">
+                    <TableIcon className="h-4 w-4 text-accent group-hover:text-primary transition-colors duration-200" />
+                    <div>
+                      <div className="font-medium text-sm font-geist group-hover:text-primary transition-colors duration-200">
+                        {table.tableName}
+                      </div>
+                      <div className="text-xs text-muted-foreground font-geist">
+                        {table.columns.length} columns
+                      </div>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-4 text-center text-muted-foreground">
-                  No tables available
+                  
+                  {table.columns.filter(col => col.isPrimary).length > 0 && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs bg-muted/50 text-secondary-foreground font-geist border-border/50"
+                    >
+                      {table.columns.filter(col => col.isPrimary).length} Keys
+                    </Badge>
+                  )}
                 </div>
-              )}
-            </div>
-          </ScrollArea>
+
+                <div className="bg-card/50 px-3 pb-3">
+                  <div className="grid grid-cols-12 text-xs py-2 px-2 text-muted-foreground border-b border-border/30 font-spaceGrotesk">
+                    <div className="col-span-4">COLUMN</div>
+                    <div className="col-span-3">TYPE</div>
+                    <div className="col-span-2 text-center">NULLABLE</div>
+                    <div className="col-span-3 text-center">KEY</div>
+                  </div>
+                  
+                  {table.columns.map((column, idx:number) => (
+                    <div 
+                      key={column.name}
+                      className={cn(
+                        "grid grid-cols-12 text-xs py-2 px-2 rounded transition-colors duration-200",
+                        idx % 2 === 0 
+                          ? "bg-background/70" 
+                          : "bg-card/70",
+                        "hover:bg-muted/20"
+                      )}
+                    >
+                      <div className="col-span-4 flex items-center gap-1.5 font-medium">
+                        {column.isPrimary && <KeyIcon className="h-3 w-3 text-accent" />}
+                        <span className="font-spaceMono">{column.name}</span>
+                      </div>
+                      <div className="col-span-3 text-primary font-spaceMono">{column.type}</div>
+                      <div className="col-span-2 text-center">
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "text-xs px-2 py-0 font-geist border-0",
+                            column.nullable 
+                              ? "bg-muted/30 text-muted-foreground" 
+                              : "bg-secondary/10 text-secondary"
+                          )}
+                        >
+                          {column.nullable ? 'Yes' : 'No'}
+                        </Badge>
+                      </div>
+                      <div className="col-span-3 text-center">
+                        {column.isPrimary && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-0 bg-accent/10 text-accent font-geist"
+                          >
+                            Primary
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center">
+            <DatabaseIcon className="h-10 w-10 mb-3 opacity-30" />
+            <p className="text-sm font-geist">No tables found</p>
+          </div>
+        )}
+      </ScrollArea>
     </Card>
   )
 }

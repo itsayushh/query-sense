@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const config: DatabaseConnectionConfig = await request.json()
     const result = await dbManager.establishConnection(config)
     const tables = await dbManager.getTables(config.type, result.connection);
+    const schemas = await dbManager.getTableSchema(config.type, result.connection, tables);
     
     if (!result.success) {
       throw new Error(result.error)
@@ -20,13 +21,16 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Connection successful',
-      tables: tables
+      tables: tables,
+      schemas:schemas,
     })
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to connect to database'
+        message: error instanceof Error ? error.message : 'Failed to connect to database',
+        tables: [],
+        schemas: [],
       },
       { status: 500 }
     )

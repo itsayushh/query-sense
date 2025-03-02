@@ -8,7 +8,7 @@ export const DatabaseHeader = async () => {
   // const databases = await getDatabases();
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-3">
       <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
         <Database className="h-7 w-7 text-primary" />
       </div>

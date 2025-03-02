@@ -3,27 +3,48 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
-import { Card, CardContent} from '@/components/ui/card'
-import { Code2, Copy, RotateCcw, Sparkles, Table, History, CheckCircle2, Download, Bot } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    Wand2,
+    Send,
+    Copy,
+    CheckCircle2,
+    Download,
+    Sparkles,
+    Zap,
+    Code2,
+    Table,
+    Bot,
+    ChevronDown,
+    ChevronUp,
+    Filter,
+    Search,
+    FileDown
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
 
 export default function DatabasePrompt() {
     const [prompt, setPrompt] = useState('')
     const [generatedQuery, setGeneratedQuery] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [queryHistory, setQueryHistory] = useState<string[]>([])
     const [tableResult, setTableResult] = useState([])
     const [copySuccess, setCopySuccess] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+    const [pageSize, setPageSize] = useState(25)
+    const [currentPage, setCurrentPage] = useState(1)
 
-    const getColumnHeaders = (data: any[]) => {
+    const getColumnHeaders = (data) => {
         if (data.length === 0) return []
         return Object.keys(data[0])
     }
 
     // Helper function to format cell values
-    const formatCellValue = (value: any) => {
+    const formatCellValue = (value) => {
         if (value === null || value === undefined) return '-'
         if (value instanceof Date || String(value).match(/^\d{4}-\d{2}-\d{2}T/)) {
             return new Date(value).toLocaleString()
@@ -34,12 +55,76 @@ export default function DatabasePrompt() {
     }
 
     // Helper function to format column header
-    const formatColumnHeader = (header: string) => {
+    const formatColumnHeader = (header) => {
         return header
             .split('_')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ')
     }
+
+    // Sort function
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    // Filter and sort data
+    const getSortedData = () => {
+        let filteredData = [...tableResult];
+        
+        // Apply search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filteredData = filteredData.filter(row => {
+                return Object.values(row).some(value => 
+                    String(value).toLowerCase().includes(term)
+                );
+            });
+        }
+        
+        // Apply sorting
+        if (sortConfig.key) {
+            filteredData.sort((a, b) => {
+                const aValue = a[sortConfig.key];
+                const bValue = b[sortConfig.key];
+                
+                // Handle null values
+                if (aValue === null && bValue === null) return 0;
+                if (aValue === null) return 1;
+                if (bValue === null) return -1;
+                
+                // Try to convert to numbers for numerical sorting
+                const aNum = Number(aValue);
+                const bNum = Number(bValue);
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Otherwise sort as strings
+                const aStr = String(aValue).toLowerCase();
+                const bStr = String(bValue).toLowerCase();
+                
+                return sortConfig.direction === 'asc' 
+                    ? aStr.localeCompare(bStr) 
+                    : bStr.localeCompare(aStr);
+            });
+        }
+        
+        return filteredData;
+    };
+
+    // Pagination
+    const getPaginatedData = () => {
+        const sortedData = getSortedData();
+        const startIndex = (currentPage - 1) * pageSize;
+        return sortedData.slice(startIndex, startIndex + pageSize);
+    };
+
+    const totalPages = Math.ceil(getSortedData().length / pageSize);
 
     // Helper function to export table data as CSV
     const exportToCSV = () => {
@@ -62,12 +147,31 @@ export default function DatabasePrompt() {
         window.URL.revokeObjectURL(url)
     }
 
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault()
+    // Helper function to export as Excel (XLSX)
+    const exportToExcel = () => {
+        if (tableResult.length === 0) return
+        
+        toast({
+            title: 'Export Started',
+            description: 'Preparing Excel file for download...',
+        })
+        
+        // In a real implementation, you would use a library like xlsx here
+        // This is a placeholder for the actual implementation
+        setTimeout(() => {
+            toast({
+                title: 'Feature Not Implemented',
+                description: 'Excel export would be here in the full implementation.',
+                variant: 'destructive',
+            })
+        }, 1000)
+    }
+
+    async function handleSubmit() {
         if (!prompt.trim()) {
             toast({
                 title: 'Empty Prompt',
-                description: 'Please enter a query description.',
+                description: 'Please describe your query intention.',
                 variant: 'destructive',
             })
             return
@@ -75,7 +179,6 @@ export default function DatabasePrompt() {
 
         try {
             setIsLoading(true)
-            
             // First, generate the query
             const generateResponse = await fetch('/api/query/generate', {
                 method: 'POST',
@@ -100,8 +203,11 @@ export default function DatabasePrompt() {
 
             const executeData = await executeResponse.json()
             if (executeData.success) {
-                setQueryHistory(prev => [...prev, prompt])
                 setTableResult(executeData.data)
+                // Reset pagination when new data arrives
+                setCurrentPage(1)
+                setSortConfig({ key: null, direction: 'asc' })
+                setSearchTerm('')
                 toast({
                     title: 'Success',
                     description: 'Query generated and executed successfully.',
@@ -111,8 +217,10 @@ export default function DatabasePrompt() {
             }
         } catch (error) {
             toast({
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'Failed to generate or execute query',
+                title: 'Query Generation Failed',
+                description: error instanceof Error
+                    ? error.message
+                    : 'Unable to generate query',
                 variant: 'destructive',
             })
         } finally {
@@ -120,116 +228,97 @@ export default function DatabasePrompt() {
         }
     }
 
-    const handleCopyQuery = () => {
-        navigator.clipboard.writeText(generatedQuery)
-        setCopySuccess(true)
-        setTimeout(() => setCopySuccess(false), 2000)
-    }
-
     return (
-        <div className="space-y-8">
-            {/* Hero Section with Improved Visual Hierarchy */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-transparent p-5">
-                <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
-                    <div className="absolute inset-0 bg-gradient-to-l from-primary/20 to-transparent" />
-                </div>
-
-                <div className="relative flex items-start gap-6">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                        <Bot className="h-7 w-7 text-primary" />
+        <div className="space-y-6">
+            {/* Prompt Section */}
+            <Card className="border-primary/10 shadow-sm">
+                <CardHeader className="py-3 px-4 bg-card border-b border-border/50">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <Bot className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-lg font-outfit">AI Query Assistant</CardTitle>
+                        </div>
                     </div>
-
-                    <div className="flex-1 space-y-2">
-                        <h1 className="text-4xl font-bold tracking-tight">AI Query Assistant</h1>
-                        <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                            Transform your questions into powerful SQL queries using natural language.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Query Interface */}
-            <Card className="border-primary/10 shadow-lg">
-                <CardContent className="p-6 space-y-8">
-                    {/* Query Input */}
-                    <div className="relative">
+                </CardHeader>
+                <CardContent className="p-6">
+                    <div className="relative group">
                         <Textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            style={{ fontSize: '1.1rem' }}
                             placeholder="What insights would you like to discover? Try: 'Show me the top 10 customers by revenue in the last quarter'"
-                            className="min-h-[120px] text-2xl leading-relaxed p-5 rounded-md
-                bg-muted/30 border-primary/10 focus:border-primary/20
-                shadow-sm transition-all duration-200"
+                            className="min-h-[120px] pr-16 text-xl 
+                            border-primary/20 focus:border-primary/40 
+                            rounded-xl transition-all duration-300"
                         />
 
-                        {prompt && (
-                            <Button
-                                onClick={() => setPrompt('')}
-                                variant="ghost"
-                                size="sm"
-                                className="absolute top-3 right-3 text-muted-foreground/60"
-                            >
-                                <RotateCcw className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-4">
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isLoading}
-                            className="flex-1 h-12 text-lg font-medium bg-primary hover:bg-primary/90
-                transition-all duration-200 rounded-xl"
-                        >
-                            {isLoading ? (
-                                <Sparkles className="mr-2 h-5 w-5 animate-spin" />
-                            ) : (
-                                <Sparkles className="mr-2 h-5 w-5" />
+                        {/* Action Buttons */}
+                        <div className="absolute right-3 bottom-3 flex items-center space-x-2">
+                            {prompt && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-full 
+                                    text-muted-foreground hover:bg-primary/10"
+                                    onClick={() => setPrompt('')}
+                                >
+                                    <Zap className="h-4 w-4" />
+                                </Button>
                             )}
-                            {isLoading ? 'Generating Query...' : 'Generate Query'}
-                        </Button>
 
-                        <Button
-                            variant="outline"
-                            className="w-12 h-12 rounded-xl"
-                        >
-                            <History className="h-5 w-5 text-primary" />
-                        </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isLoading || !prompt.trim()}
+                                className="group flex items-center gap-2 
+                                bg-primary text-primary-foreground 
+                                hover:bg-primary/90 rounded-xl 
+                                transition-all duration-300"
+                            >
+                                {isLoading ? (
+                                    <Sparkles className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Send className="h-4 w-4" />
+                                )}
+                                {isLoading ? 'Generating...' : 'Generate Query'}
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Results Section with Improved Layout */}
+            {/* Query and Results Section */}
             {generatedQuery && (
-                <div className="bg-card rounded-xl border border-primary/10 shadow-lg overflow-hidden">
-                    <Tabs defaultValue="query" className="w-full">
-                        <div className="px-6 pt-6">
-                            <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-xl p-1">
+                <Card className="border-primary/10 shadow-sm">
+                    <CardContent className="p-4">
+                        <Tabs defaultValue="query" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-xl p-1 mb-4">
                                 <TabsTrigger value="query" className="rounded-lg">
                                     <Code2 className="h-4 w-4 mr-2" />
                                     SQL Query
                                 </TabsTrigger>
-                                <TabsTrigger value="results" className="rounded-lg">
+                                <TabsTrigger
+                                    value="results"
+                                    disabled={tableResult.length === 0}
+                                    className="rounded-lg"
+                                >
                                     <Table className="h-4 w-4 mr-2" />
                                     Results
                                 </TabsTrigger>
                             </TabsList>
-                        </div>
 
-                        <TabsContent value="query" className="p-6">
-                            <div className="rounded-xl border border-primary/10 overflow-hidden">
-                                <div className="bg-muted px-4 py-3 flex justify-between items-center">
+                            <TabsContent value="query">
+                                <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <Code2 className="h-4 w-4 text-primary" />
-                                        <span className="font-medium">Generated SQL</span>
+                                        <Wand2 className="h-4 w-4 text-primary" />
+                                        <span className="font-medium text-sm">Generated SQL</span>
                                     </div>
                                     <Button
-                                        size="sm"
                                         variant="ghost"
-                                        onClick={handleCopyQuery}
-                                        className="hover:bg-primary/10"
+                                        size="sm"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(generatedQuery)
+                                            setCopySuccess(true)
+                                            setTimeout(() => setCopySuccess(false), 2000)
+                                        }}
                                     >
                                         {copySuccess ? (
                                             <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -238,88 +327,188 @@ export default function DatabasePrompt() {
                                         )}
                                     </Button>
                                 </div>
-                                <pre className="p-4 bg-background/60">
-                                    <code className="text-lg font-mono">{generatedQuery}</code>
+                                <pre className="bg-muted/30 p-3 rounded-lg overflow-x-auto text-sm font-mono">
+                                    {generatedQuery}
                                 </pre>
-                            </div>
-                        </TabsContent>
+                            </TabsContent>
 
-                        <TabsContent value="results" className="p-6">
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <Table className="h-4 w-4 text-primary" />
-                                        <h3 className="font-medium">Query Results</h3>
-                                        <Badge variant="secondary" className="bg-primary/10">
-                                            {tableResult.length} rows
-                                        </Badge>
+                            <TabsContent value="results">
+                                <div className="space-y-4">
+                                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <Table className="h-4 w-4 text-primary" />
+                                            <h3 className="font-medium">Query Results</h3>
+                                            <Badge variant="secondary" className="bg-primary/10">
+                                                {getSortedData().length} rows
+                                            </Badge>
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                            <div className="relative">
+                                                <Search className="h-4 w-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                                                <Input
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    placeholder="Search results..."
+                                                    className="h-8 pl-8 pr-4 w-full md:w-60 text-sm rounded-lg"
+                                                />
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 rounded-lg"
+                                                    onClick={exportToCSV}
+                                                >
+                                                    <Download className="h-4 w-4 mr-2" />
+                                                    CSV
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent hover:text-accent"
+                                                    onClick={exportToExcel}
+                                                >
+                                                    <FileDown className="h-4 w-4 mr-2" />
+                                                    Excel
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="rounded-lg"
-                                        onClick={exportToCSV}
-                                    >
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Export CSV
-                                    </Button>
-                                </div>
 
-                                <div className="rounded-xl border border-primary/10 overflow-hidden">
-                                    <ScrollArea className="w-full h-[500px]">
-                                        <div className="w-full">
-                                            <table className="w-full text-sm">
-                                                {tableResult.length > 0 ? (
-                                                    <>
-                                                        <thead className="bg-muted sticky top-0 z-10">
-                                                            <tr>
-                                                                {getColumnHeaders(tableResult).map((header) => (
-                                                                    <th
-                                                                        key={header}
-                                                                        className="px-6 py-4 text-left font-spaceMono text-base sticky top-0 bg-muted"
-                                                                    >
-                                                                        {formatColumnHeader(header)}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-border/40 bg-background/60">
-                                                            {tableResult.map((row, rowIndex) => (
-                                                                <tr
-                                                                    key={rowIndex}
-                                                                    className="hover:bg-muted/30 transition-colors"
-                                                                >
+                                    <div className="rounded-xl border border-border/50 overflow-hidden">
+                                        <ScrollArea className="w-full h-[400px] custom-scrollbar">
+                                            <div className="w-full">
+                                                <table className="w-full text-sm">
+                                                    {tableResult.length > 0 ? (
+                                                        <>
+                                                            <thead className="bg-card sticky top-0 z-10">
+                                                                <tr>
                                                                     {getColumnHeaders(tableResult).map((header) => (
-                                                                        <td
-                                                                            key={`${rowIndex}-${header}`}
-                                                                            className="px-6 py-4 whitespace-nowrap"
+                                                                        <th
+                                                                            key={header}
+                                                                            className="px-4 py-3 text-left font-medium font-spaceGrotesk text-sm sticky top-0 bg-card border-b border-border/50"
                                                                         >
-                                                                            <div className="max-w-xs truncate">
-                                                                                {formatCellValue(row[header])}
-                                                                            </div>
-                                                                        </td>
+                                                                            <button 
+                                                                                className="flex items-center gap-1 hover:text-primary transition-colors"
+                                                                                onClick={() => requestSort(header)}
+                                                                            >
+                                                                                {formatColumnHeader(header)}
+                                                                                {sortConfig.key === header && (
+                                                                                    sortConfig.direction === 'asc' 
+                                                                                    ? <ChevronUp className="h-3 w-3" /> 
+                                                                                    : <ChevronDown className="h-3 w-3" />
+                                                                                )}
+                                                                            </button>
+                                                                        </th>
                                                                     ))}
                                                                 </tr>
-                                                            ))}
+                                                            </thead>
+                                                            <tbody className="divide-y divide-border/30 bg-background/60">
+                                                                {getPaginatedData().map((row, rowIndex) => (
+                                                                    <tr
+                                                                        key={rowIndex}
+                                                                        className="hover:bg-muted/20 transition-colors"
+                                                                    >
+                                                                        {getColumnHeaders(tableResult).map((header) => {
+                                                                            const value = row[header];
+                                                                            const formattedValue = formatCellValue(value);
+                                                                            
+                                                                            // Determine if this is a number column
+                                                                            const isNumeric = typeof value === 'number' || 
+                                                                                (typeof value === 'string' && !isNaN(Number(value)));
+                                                                            
+                                                                            return (
+                                                                                <td
+                                                                                    key={`${rowIndex}-${header}`}
+                                                                                    className={cn(
+                                                                                        "px-4 py-3",
+                                                                                        isNumeric ? "text-right font-spaceMono" : "",
+                                                                                        header === sortConfig.key ? "bg-muted/10" : ""
+                                                                                    )}
+                                                                                >
+                                                                                    <div className={cn(
+                                                                                        "max-w-xs",
+                                                                                        formattedValue.length > 40 ? "truncate" : ""
+                                                                                    )}
+                                                                                    title={formattedValue.length > 40 ? formattedValue : ""}>
+                                                                                        {formattedValue}
+                                                                                    </div>
+                                                                                </td>
+                                                                            );
+                                                                        })}
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </>
+                                                    ) : (
+                                                        <tbody>
+                                                            <tr>
+                                                                <td className="px-6 py-12 text-center text-muted-foreground">
+                                                                    No results to display. Execute the query to see data.
+                                                                </td>
+                                                            </tr>
                                                         </tbody>
-                                                    </>
-                                                ) : (
-                                                    <tbody>
-                                                        <tr>
-                                                            <td className="px-6 py-8 text-center text-muted-foreground">
-                                                                No results to display. Execute the query to see data.
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                )}
-                                            </table>
+                                                    )}
+                                                </table>
+                                            </div>
+                                        </ScrollArea>
+                                    </div>
+                                    
+                                    {/* Pagination Controls */}
+                                    {tableResult.length > 0 && (
+                                        <div className="flex items-center justify-between text-sm mt-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-muted-foreground">
+                                                    Showing {Math.min(getSortedData().length, 1 + (currentPage - 1) * pageSize)}-{Math.min(currentPage * pageSize, getSortedData().length)} of {getSortedData().length}
+                                                </span>
+                                                <select 
+                                                    value={pageSize}
+                                                    onChange={(e) => {
+                                                        setPageSize(Number(e.target.value));
+                                                        setCurrentPage(1); // Reset to first page
+                                                    }}
+                                                    className="border rounded px-2 py-1 text-xs bg-background"
+                                                >
+                                                    <option value="10">10</option>
+                                                    <option value="25">25</option>
+                                                    <option value="50">50</option>
+                                                    <option value="100">100</option>
+                                                </select>
+                                                <span className="text-muted-foreground">per page</span>
+                                            </div>
+                                            
+                                            <div className="flex gap-1">
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    disabled={currentPage === 1}
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    className="h-8 w-8 p-0 rounded-lg"
+                                                >
+                                                    <ChevronUp className="h-4 w-4 rotate-90" />
+                                                </Button>
+                                                <span className="flex items-center justify-center min-w-8 px-3 rounded-lg border h-8">
+                                                    {currentPage}
+                                                </span>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    disabled={currentPage >= totalPages}
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    className="h-8 w-8 p-0 rounded-lg"
+                                                >
+                                                    <ChevronDown className="h-4 w-4 rotate-90" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </ScrollArea>
+                                    )}
                                 </div>
-                            </div>
-                        </TabsContent>
-                    </Tabs>
-                </div>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
             )}
         </div>
     )
