@@ -57,7 +57,7 @@ function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           {/* <BrickWall className='h-8 w-8 text-primary' /> */}
-          { pathname === '/' && <h1 className="text-xl font-bold">QuerySense</h1>}
+          { pathname === '/' && <h1 className="flex flex-row text-xl font-bold">Query<p className='text-primary'>Sense</p></h1>}
         </Link>
 
         {/* Breadcrumbs */}
