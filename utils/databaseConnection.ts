@@ -16,8 +16,8 @@ export function createConnectionConfig(config: DatabaseConnectionConfig) {
                 database: config.parameters.database,
             };
 
-        case 'mongodb':
-            return `mongodb://${config.parameters.username}:${encodeURIComponent(config.parameters.password)}@${config.parameters.host}:${config.parameters.port}/${config.parameters.database}`;
+        // case 'mongodb':
+        //     return `mongodb://${config.parameters.username}:${encodeURIComponent(config.parameters.password)}@${config.parameters.host}:${config.parameters.port}/${config.parameters.database}`;
 
         case 'sqlite':
             return config.parameters.database;

@@ -2,7 +2,7 @@
 
     export type ConnectionMethod = 'url' | 'parameters';
 
-    export type DatabaseType = 'mysql' | 'postgresql' | 'mongodb' | 'sqlite';
+    export type DatabaseType = 'mysql' | 'postgresql' | 'sqlite';
 
     export interface ConnectionParameters {
         host: string;
