@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         const databases = await dbConnection.getDatabase(connection);
         console.log('databases', databases)
         if(databases.length === 0) {
-            return NextResponse.json({success: false, error: 'No databases found'});
+            return NextResponse.json({success: false, error: 'No database table found to query'});
         }else{
             return NextResponse.json({success: true, data: databases});
         }

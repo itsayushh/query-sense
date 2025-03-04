@@ -23,10 +23,9 @@ type SortConfig = {
 interface DataTableProps {
     data: TableRow[];
     onExportCSV?: () => void;
-    onExportExcel?: () => void;
 }
 
-export function DataTable({ data, onExportCSV, onExportExcel }: DataTableProps) {
+export function DataTable({ data, onExportCSV }: DataTableProps) {
     const [searchTerm, setSearchTerm] = useState<string>('')
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' })
     const [pageSize, setPageSize] = useState<number>(25)

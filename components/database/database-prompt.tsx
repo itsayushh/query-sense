@@ -58,25 +58,6 @@ export default function DatabasePrompt() {
         window.URL.revokeObjectURL(url)
     }
 
-    // Export as Excel (placeholder)
-    const exportToExcel = (): void => {
-        if (tableResult.length === 0) return
-        
-        toast({
-            title: 'Export Started',
-            description: 'Preparing Excel file for download...',
-        })
-        
-        // In a real implementation, you would use a library like xlsx here
-        setTimeout(() => {
-            toast({
-                title: 'Feature Not Implemented',
-                description: 'Excel export would be here in the full implementation.',
-                variant: 'destructive',
-            })
-        }, 1000)
-    }
-
     // Handle form submission
     async function handleSubmit(): Promise<void> {
         if (!prompt.trim()) {
@@ -249,7 +230,6 @@ export default function DatabasePrompt() {
                                     <DataTable 
                                         data={tableResult}
                                         onExportCSV={exportToCSV}
-                                        onExportExcel={exportToExcel}
                                     />
                                 ) : (
                                     <div className="p-12 text-center text-muted-foreground flex flex-col items-center gap-4">
