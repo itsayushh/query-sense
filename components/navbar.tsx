@@ -7,6 +7,7 @@ import React from 'react'
 import { Button } from './ui/button'
 import { LogOut, Home, Database, Settings, LucideIcon } from 'lucide-react'
 import { ThemeToggle } from './ui/theme-toggle'
+import { createClient } from '@/lib/supabase/client'
 
 interface BreadcrumbItem {
   label: string;
@@ -20,8 +21,10 @@ interface BreadcrumbConfig {
   };
 }
 
-function Navbar() {
+async function Navbar() {
   const pathname = usePathname()
+  const supabase = createClient();
+  const {data,error} = await supabase.auth.getUser();
 
   // Breadcrumb configuration
   const breadcrumbConfig: BreadcrumbConfig = {
@@ -57,7 +60,7 @@ function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           {/* <BrickWall className='h-8 w-8 text-primary' /> */}
-          { pathname === '/' && <h1 className="flex flex-row text-xl font-bold">Query<p className='text-primary'>Sense</p></h1>}
+          { <h1 className="flex flex-row text-xl font-bold">Query<p className='text-primary'>Sense</p></h1>}
         </Link>
 
         {/* Breadcrumbs */}
