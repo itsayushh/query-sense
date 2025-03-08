@@ -1,7 +1,7 @@
 
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
-import { DatabaseConnectionConfig, ConnectionParameters, DatabaseType, ConnectionMethod } from '@/types/Database'
+import { DatabaseConnectionConfig, DatabaseType } from '@/types/Database'
 import crypto from 'crypto'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret'
