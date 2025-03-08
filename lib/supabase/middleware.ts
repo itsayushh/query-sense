@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { trackQueryUsage } from './queryUsage'
+import { ipAddress } from '@vercel/functions';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -37,19 +39,39 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
+  // Check if the request is for query generation
+  const isQueryGenerationRoute = request.nextUrl.pathname === '/api/query/generate'
+
+  if (isQueryGenerationRoute && !user) {
+    const ip = ipAddress(request) || request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip')
+
+    console.log('Query generation route, IP address:', ip)
+    if(!ip) {
+      console.log('IP address not found, redirecting to auth page')
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth'
+      return NextResponse.redirect(url)
+    }
+    // Track query usage for unauthenticated users
+    const queryUsage = await trackQueryUsage(ip)
+    console.log('Query usage:', queryUsage)
+
+    if (!queryUsage.allowed) {
+      console.log('Query usage limit exceeded, redirecting to auth page')
+      return NextResponse.json({ success:false, message: 'Query limit exceeded please sign in to continue' }, { status: 403 });
+    }
+  }
+
+  else if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth')
   ) {
     console.log('No user found, redirecting to login page')
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/auth'
     return NextResponse.redirect(url)
   }
-
-  console.log('User found, continuing with session update', user)
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
