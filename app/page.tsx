@@ -20,7 +20,7 @@ export default function HomePage() {
       description: "Faster than traditional methods"
     },
     {
-      value: "5+",
+      value: "3",
       label: "Database Support",
       description: "MySQL, SQLite and more"
     },
@@ -58,14 +58,14 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Button size="lg" className="min-w-[200px] shadow-lg shadow-primary/20 group" asChild>
                 <Link href="/databases">
-                  Start Free Trial
+                  Get Started
                   <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="min-w-[200px]">
+              {/* <Button size="lg" variant="outline" className="min-w-[200px]">
                 <Play className="mr-2 h-4 w-4" />
                 Watch Demo
-              </Button>
+              </Button> */}
             </div>
 
             {/* Stats Grid */}
@@ -91,7 +91,7 @@ export default function HomePage() {
                 <DatabaseIcon className="h-5 w-5 text-primary" />
                 <span className="font-medium">Natural Language Query Interface</span>
               </div>
-              <Badge variant="secondary" className="bg-primary/20 text-primary">Live Demo</Badge>
+              <Badge variant="secondary" className="bg-primary/20 text-primary">MySQL</Badge>
             </div>
           </div>
 
