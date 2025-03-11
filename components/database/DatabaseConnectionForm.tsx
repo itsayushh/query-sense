@@ -316,7 +316,7 @@ function ParametersForm({
                                 className={`
                                                           h-12 bg-background/50 backdrop-blur-sm
                                                           border border-input/50 hover:border-input
-                                                          focus:border-primary focus:ring-1 focus:ring-primary
+                                                          focus:border-none
                                                           transition-all duration-200 pl-11
                                                             ${errors.password ? 'border-red-500' : 'border-border/50'}
                                                         `}

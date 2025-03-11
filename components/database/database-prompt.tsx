@@ -220,7 +220,7 @@ export default function DatabasePrompt() {
                                         )}
                                     </Button>
                                 </div>
-                                <pre className="bg-muted/30 p-3 rounded-lg overflow-x-auto text-sm font-mono">
+                                <pre className="bg-muted/30 p-3 rounded-lg overflow-x-auto text-sm font-jetbrainsMono">
                                     {generatedQuery}
                                 </pre>
                             </TabsContent>

@@ -36,12 +36,12 @@ export const DatabaseFormInput = ({
 
     const inputStyles = cn(
         "h-12 bg-background/50 backdrop-blur-sm",
-        "border border-input/50 hover:border-input",
-        "focus:border-primary focus:ring-1 focus:ring-primary",
+        "border border-input/80 hover:border-input",
+        "focus:border-none focus:outline-none focus:ring-0",
         "transition-all duration-200",
         Icon && "pl-11",
-        error && "border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500",
-        success && "border-green-500 hover:border-green-600 focus:border-green-500 focus:ring-green-500",
+        error && "border-red-500 hover:border-red-600",
+        success && "border-green-500 hover:border-green-500",
         "[&>*]:text-lg [&_input]:text-lg", // This ensures the input text itself is large
         className
     );
@@ -79,12 +79,7 @@ export const DatabaseFormInput = ({
                     {...props}
                     disabled={disabled}
                     className={inputStyles}
-                    style={{ fontSize: '1.08rem' }} // Additional backup using inline style
-                    aria-invalid={error ? "true" : undefined}
-                    aria-describedby={
-                        error ? `${props.id}-error` : 
-                        helperText ? `${props.id}-helper` : undefined
-                    }
+                    style={{ fontSize: '1.08rem' }}
                 />
 
                 {(error || success) && (
