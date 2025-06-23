@@ -7,11 +7,11 @@ import {
   Zap,
   Code,
   ChevronRight,
-  Play,
   CheckCircle2,
   Globe,
   Shield,
   Cpu,
+  Star,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -105,9 +105,11 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="min-w-[200px] h-12 text-base font-medium">
-                <Play className="mr-2 h-5 w-5" />
-                Watch Demo
+              <Button size="lg" variant="outline" className="min-w-[200px] h-12 text-base font-medium" asChild>
+                <Link href="https://github.com/itsayushh/query-sense" target="_blank" rel="noopener noreferrer">
+                  <Star className="mr-2 h-5 w-5" />
+                  Star on GitHub
+                </Link>
               </Button>
             </div>
           </div>
@@ -333,16 +335,13 @@ LIMIT 5;`}</code>
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-2">
               <DatabaseIcon className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">QueryPro</span>
-            </div>
+              <span className="font-bold text-xl">QuerySense</span>
+            </div>  
             <div className="flex flex-wrap justify-center gap-8">
-              <Link href="/features" className="text-muted-foreground hover:text-foreground transition-colors">Features</Link>
-              <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
-              <Link href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">Documentation</Link>
-              <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+              <Link href="https://www.github.com/itsayushh" className="text-muted-foreground hover:text-foreground transition-colors">Github</Link>
             </div>
             <div className="text-sm text-muted-foreground">
-              © 2025 QueryPro. All rights reserved.
+              © 2025 QuerySense. All rights reserved.
             </div>
           </div>
         </div>

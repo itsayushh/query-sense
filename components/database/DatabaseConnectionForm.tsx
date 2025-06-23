@@ -19,7 +19,7 @@ const DEFAULT_VALUES: DatabaseConnectionConfig = {
     type: 'mysql',
     method: 'parameters',
     parameters: {
-        host: 'localhost',
+        host: '',
         port: 3306,
         username: '',
         password: '',
