@@ -19,7 +19,7 @@ export class QueryGenerator {
     }
   ): Promise<string> {
     const model = this.genAI.getGenerativeModel({
-      model: "gemini-1.5-pro",
+      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite',
       generationConfig: {
         temperature: this.temperature,
         topK: 1,
