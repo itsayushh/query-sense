@@ -7,15 +7,7 @@ import React from 'react'
 import { Button } from './ui/button'
 import { LogOut, Home, Database, Settings, LucideIcon, User } from 'lucide-react'
 import { ThemeToggle } from './ui/theme-toggle'
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger 
-} from './ui/dropdown-menu'
-import { Avatar, AvatarFallback } from './ui/avatar'
-import { useAuth } from '@/utils/auth-context'
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 
 interface BreadcrumbItem {
   label: string;
@@ -32,19 +24,6 @@ interface BreadcrumbConfig {
 function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, profile, isLoading, signOut } = useAuth()
-
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    if (!user) return '?'
-    
-    if (profile?.full_name) {
-      const names = profile.full_name.split(' ')
-      return names.map((name: string) => name[0].toUpperCase()).join('')
-    }
-    
-    return user.email?.substring(0, 2).toUpperCase() || '?'
-  }
 
   // Breadcrumb configuration
   const breadcrumbConfig: BreadcrumbConfig = {
@@ -74,13 +53,6 @@ function Navbar() {
     items: []
   }
 
-  // Handle logout
-  const handleLogout = async () => {
-    await signOut()
-  }
-
-  // Don't render anything while loading
-  if (isLoading) return null
 
   return (
     <nav className="flex items-center justify-between p-4 border-b border-border/40">
@@ -95,11 +67,11 @@ function Navbar() {
           {currentBreadcrumb.items.map((item: BreadcrumbItem, index: number) => {
             const Icon = item.icon
             const isLast = index === currentBreadcrumb.items.length - 1
-            
+
             return (
               <React.Fragment key={item.href}>
-                <Link 
-                  href={item.href} 
+                <Link
+                  href={item.href}
                   className={`
                     flex items-center gap-1 
                     ${isLast ? 'text-foreground' : 'hover:text-primary transition-colors'}
@@ -125,10 +97,10 @@ function Navbar() {
         )}
 
         {pathname === '/databases/view' && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => router.push('/databases')} 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/databases')}
             className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-1 text-xs"
           >
             <LogOut className="h-3 w-3" />
@@ -139,53 +111,19 @@ function Navbar() {
         <ThemeToggle />
 
         {/* Authentication */}
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="rounded-full p-0 w-8 h-8">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/30 hover:bg-primary/30 text-xs">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <div className="px-0 py-1.5 text-xs font-medium text-muted-foreground">
-                {user.email}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="cursor-pointer">
-                  <User className="h-3 w-3 mr-2" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer">
-                  <Settings className="h-3 w-3 mr-2" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20 cursor-pointer"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-3 w-3 mr-2" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button 
-            variant="outline" 
-            className="text-sm"
-            onClick={() => router.push('/auth')}
-          >
-            Log in
-          </Button>
-        )}
+        <SignedOut>
+          <SignInButton >
+            <Button
+              variant="outline"
+              className="text-sm"
+            >
+              Log in
+            </Button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
       </div>
     </nav>
   )
