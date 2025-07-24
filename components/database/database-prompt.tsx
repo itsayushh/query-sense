@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
@@ -19,6 +20,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { DataTable } from '../ui/data-table'
+import { FreeQueryStatus } from '../free-query-status'
+import { useFreeQueries } from '@/contexts/FreeQueryContext'
 
 // Define types for our data and state
 type TableRow = Record<string, any>;
@@ -28,9 +31,12 @@ interface QueryResponse {
     message?: string;
     data?: TableRow[];
     query?: string;
+    shouldConsumeQuery?: boolean;
 }
 
 export default function DatabasePrompt() {
+    const { isSignedIn } = useUser()
+    const { canMakeQuery, hasExhaustedQueries, consumeQuery } = useFreeQueries()
     const [prompt, setPrompt] = useState<string>('')
     const [generatedQuery, setGeneratedQuery] = useState<string>('')
     const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -69,8 +75,19 @@ export default function DatabasePrompt() {
             return
         }
 
+        // Check if user can make a query (either signed in or has free queries)
+        if (!canMakeQuery) {
+            toast({
+                title: 'Query Limit Reached',
+                description: 'You have used all your free queries. Please sign in to continue.',
+                variant: 'destructive',
+            })
+            return
+        }
+
         try {
             setIsLoading(true)
+            
             // First, generate the query
             const generateResponse = await fetch('/api/query/generate', {
                 method: 'POST',
@@ -94,8 +111,15 @@ export default function DatabasePrompt() {
             })
 
             const executeData: QueryResponse = await executeResponse.json()
+            
             if (executeData.success && executeData.data) {
                 setTableResult(executeData.data)
+                
+                // Consume free query if suggested by API
+                if (executeData.shouldConsumeQuery) {
+                    consumeQuery()
+                }
+                
                 toast({
                     title: 'Success',
                     description: 'Query generated and executed successfully.',
@@ -118,6 +142,11 @@ export default function DatabasePrompt() {
 
     return (
         <div className="space-y-4">
+            {/* Free Query Status Alert */}
+            {hasExhaustedQueries && (
+                <FreeQueryStatus variant="alert" showLoginButton={true} />
+            )}
+            
             {/* Prompt Section */}
             <Card className="border-primary/10 shadow-sm ">
                 <CardHeader className="py-3 px-4 bg-card border-b border-border/50">
@@ -126,6 +155,10 @@ export default function DatabasePrompt() {
                             <Bot className="h-5 w-5 text-primary" />
                             <CardTitle className="text-lg font-outfit">AI Query Assistant</CardTitle>
                         </div>
+                        {/* Compact free query status in header */}
+                        {!isSignedIn && !hasExhaustedQueries && (
+                            <FreeQueryStatus variant="badge" showLoginButton={false} />
+                        )}
                     </div>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -155,18 +188,21 @@ export default function DatabasePrompt() {
 
                             <Button
                                 onClick={handleSubmit}
-                                disabled={isLoading || !prompt.trim()}
+                                disabled={isLoading || !prompt.trim() || (!isSignedIn && !canMakeQuery)}
                                 className="group flex items-center gap-2 
                                 bg-primary text-primary-foreground 
                                 hover:bg-primary/90 rounded-xl 
-                                transition-all duration-300"
+                                transition-all duration-300
+                                disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? (
                                     <Sparkles className="h-4 w-4 animate-spin" />
                                 ) : (
                                     <Send className="h-4 w-4" />
                                 )}
-                                {isLoading ? 'Generating...' : 'Generate Query'}
+                                {isLoading ? 'Generating...' : 
+                                 !isSignedIn && !canMakeQuery ? 'Sign In Required' : 
+                                 'Generate Query'}
                             </Button>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { DatabaseManager } from '@/lib/database/manager'
 import { getStoredCredentials } from '@/utils/sessionStore'
 import { DatabaseFactory } from '@/lib/database/factory'
@@ -10,6 +11,12 @@ export async function POST(request: Request) {
 
   try {
     const { query } = await request.json()
+    
+    // Check authentication status
+    const { userId } = await auth()
+    
+    // For unauthenticated users, the middleware has already checked free queries
+    // If we reach here, they either have queries left or are authenticated
     
     // Retrieve stored database credentials
     config = await getStoredCredentials()
@@ -32,10 +39,12 @@ export async function POST(request: Request) {
       throw new Error(`Query execution failed: ${result.error}`)
     }
 
+    // Return success with query consumption indicator for frontend
     return NextResponse.json({ 
       success: true, 
       query: query, 
-      data: result.data 
+      data: result.data,
+      shouldConsumeQuery: !userId // Only consume if not authenticated
     })
   } catch (error) {
     return NextResponse.json(

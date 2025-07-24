@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import Navbar from "@/components/navbar";
 import { ClerkProvider } from "@clerk/nextjs";
+import { FreeQueryProvider } from "@/contexts/FreeQueryContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,16 +41,18 @@ export default function RootLayout({
       <head />
       <body className={`${geistSans.variable} ${outfit.variable} ${spaceGrotesk.variable} ${spaceMono.variable} font-spaceGrotesk antialiased`}>
         <ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <FreeQueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <Navbar />
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </FreeQueryProvider>
         </ClerkProvider>
       </body>
     </html>

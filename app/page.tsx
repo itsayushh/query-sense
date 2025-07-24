@@ -98,6 +98,12 @@ export default function HomePage() {
               Built for data teams who want to move faster without sacrificing accuracy.
             </p>
 
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+                🎉 5 Free Queries - No Sign Up Required
+              </Badge>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Button size="lg" className="min-w-[200px] h-12 shadow-lg shadow-primary/20 group text-base font-medium" asChild>
                 <Link href="/databases">
