@@ -27,7 +27,7 @@ const spaceMono = Space_Mono({
 
 
 export const metadata: Metadata = {
-  title: "QuerySense",
+  title: "QuerySense - Simplifying Database Queries with AI",
   description: "Connect to your database and start querying",
 };
 

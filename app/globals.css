@@ -4,8 +4,7 @@
 
 @layer base {
   :root {
-    /* Core Brand Colors - Professional B2B Palette */
-    --primary: 222 83% 45%;      /* Strong, trustworthy blue */
+    --primary: 222 83% 45%; 
     --primary-foreground: 0 0% 100%;
     
     /* Secondary Colors - Refined Business Neutrals */
