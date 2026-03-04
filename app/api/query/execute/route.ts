@@ -1,8 +1,19 @@
-import { NextResponse } from 'next/server'
+ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { DatabaseManager } from '@/lib/database/manager'
 import { getStoredCredentials } from '@/utils/sessionStore'
 import { DatabaseFactory } from '@/lib/database/factory'
+import { QueryGenerator } from '@/lib/ai/queryGenerator'
+
+// Reuse the same query generator instances
+const queryGenerators = new Map<string, QueryGenerator>()
+
+function getQueryGenerator(sessionId: string): QueryGenerator {
+  if (!queryGenerators.has(sessionId)) {
+    queryGenerators.set(sessionId, new QueryGenerator(process.env.GEMINI_API_KEY!))
+  }
+  return queryGenerators.get(sessionId)!
+}
 
 export async function POST(request: Request) {
   let connection: any = null
@@ -15,8 +26,8 @@ export async function POST(request: Request) {
     // Check authentication status
     const { userId } = await auth()
     
-    // For unauthenticated users, the middleware has already checked free queries
-    // If we reach here, they either have queries left or are authenticated
+    // Get session ID
+    const sessionId = request.headers.get('x-session-id') || 'default'
     
     // Retrieve stored database credentials
     config = await getStoredCredentials()
@@ -34,6 +45,16 @@ export async function POST(request: Request) {
     // Execute query
     const dbConnection = DatabaseFactory.getConnection(config.type)
     const result = await dbConnection.executeQuery(connection, query)
+
+    // Get query generator to provide execution feedback
+    const queryGenerator = getQueryGenerator(sessionId)
+    
+    // Add execution feedback to conversation context
+    await queryGenerator.addExecutionFeedback(
+      query, 
+      result.success, 
+      result.success ? undefined : result.error
+    )
 
     if (!result.success) {
       throw new Error(`Query execution failed: ${result.error}`)
